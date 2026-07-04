@@ -45,8 +45,8 @@ app.delete('/cart/delete/:id', cartdelete); // tested
  
 
 // <==== Order Management Route =====>
-app.post("/payment", paymentController);
-app.get("/getOrder/:id", getOrder);
+app.post("/payment", paymentController); // tested
+app.get("/getOrder/:id", getOrder);  // tested
 
 
 // <==== User Management Route =====>
@@ -63,14 +63,7 @@ app.listen(port, (req, res) => {
 });
 
 
-
-
-
-
-
-
 // <==== limiter ====>
-
 // const limiter = rateLimit({
 // 	windowMs: 15 * 60 * 1000,
 // 	limit: 100,

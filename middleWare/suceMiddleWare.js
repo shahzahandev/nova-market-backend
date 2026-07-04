@@ -5,7 +5,11 @@ let suceMiddleWare = (req, res, next) => {
 
     jwt.verify(token, process.env.TOKEN_SECRET, function (err, decoded) {
        if(err){
-        return res.send({message: "Unauthorization."})
+        return res.status(400).json({
+            success: false,
+            message: "Unauthorization.",
+            error: error.message
+        }); 
        } else {
         next();
        }

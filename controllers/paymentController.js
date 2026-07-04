@@ -102,7 +102,7 @@ const getOrder = async (req, res) => {
   const { id } = req.params
 
   try {
-    const order = await Order.findOne({ _id: id });
+    const order = await Order.find({ _id: id });
 
     if (!order) {
       return res.status(404).json({

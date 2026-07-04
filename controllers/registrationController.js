@@ -19,7 +19,7 @@ let registrationController = async (req, res) => {
             return res.status(409).json({
                 success: false,
                 message: "An account already exists with this email address."
-            })
+            });
         }
 
         // <=== if email, password & confirm password terms are empty ===>
@@ -30,7 +30,7 @@ let registrationController = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Password and confirm password do not match."
-            })
+            });
         }
 
         // <=== if terms is false ===>
@@ -38,21 +38,25 @@ let registrationController = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "You must accept the terms and conditions to continue."
-            })
+            });
         }
-        const hash = bcrypt.hashSync(password, 10)
         // <=== MongoDB saving proccess START ===>
+        const hash = bcrypt.hashSync(password, 10);
         let user = new User({
-            email, password: hash, terms
-        })
-        await user.save()
+            email, 
+            password: hash, 
+            terms
+        });
+        await user.save();
 
         // <=== Token Genarate ===>
         let token = tokenGenerator({
             id: user._id,
             email: user.email
-        }, process.env.TOKEN_SECRET,
-            process.env.JWT_EXPIRES)
+        }, 
+        process.env.TOKEN_SECRET,
+        process.env.JWT_EXPIRES
+    )
 
         // <===  Mail Verification ===>
         mailVerification(token, email)

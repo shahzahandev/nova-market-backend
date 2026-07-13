@@ -1,13 +1,13 @@
-const User = require('../models/userModelSchema')
-const jwt = require('jsonwebtoken')
-const bcrypt = require("bcryptjs")
+const User = require('./userController');
+const jwt = require('jsonwebtoken');
+const bcrypt = require("bcryptjs");
 
 const { mailVerification, resetPassword } = require('../utils/email');
 const { tokenGenerator } = require('../utils/tokenGenerator');
 const { emptyFillValidation } = require('../utils/validation');
 
 
-let registrationController = async (req, res) => {
+exports.registrationController = async (req, res) => {
     const { email, password, confirmPassword, terms } = req.body
 
     try {
@@ -68,6 +68,7 @@ let registrationController = async (req, res) => {
         })
         // <=== MongoDB saving proccess END ===>
     } catch (error) {
+        console.log(error)
         return res.status(500).json({
             success: false,
             message: "Internal server error. Please try again later.",
@@ -76,7 +77,7 @@ let registrationController = async (req, res) => {
     }
 }
 
-let loginController = async (req, res) => {
+exports.loginController = async (req, res) => {
     const { email, password } = req.body
 
     try {
@@ -123,7 +124,7 @@ let loginController = async (req, res) => {
     }
 }
 
-let forgotPasswordController = async (req, res) => {
+exports.forgotPasswordController = async (req, res) => {
     let { email } = req.body
 
     try {
@@ -166,8 +167,7 @@ let forgotPasswordController = async (req, res) => {
     }
 }
 
-// with out test in postman
-let reSetPasswordController = async(req, res) => {
+exports.reSetPasswordController = async(req, res) => {
     let { newPassword, confirmPassword } = req.body
     let { token } = req.params
 
@@ -211,7 +211,7 @@ let reSetPasswordController = async(req, res) => {
     }
 }
 
-let resendEmailVerificationController = async (req, res) => {
+exports.resendEmailVerificationController = async (req, res) => {
     let { email } = req.body
 
     try {
@@ -242,7 +242,7 @@ let resendEmailVerificationController = async (req, res) => {
     }
 }
 
-let verifyEmailController = async (req, res) => {
+exports.verifyEmailController = async (req, res) => {
     const { token } = req.params
 
     try {
@@ -276,10 +276,5 @@ let verifyEmailController = async (req, res) => {
         })
     }
 }
-
-
-
-
-module.exports = { registrationController, loginController, forgotPasswordController, reSetPasswordController, resendEmailVerificationController, verifyEmailController }
 
 // ndmt uxan reaf igve

@@ -2,7 +2,7 @@ const axios = require('axios');
 const Cart = require("../models/cardModel");
 const Order = require('../models/orderModel');
 
-const paymentController = async (req, res) => {
+exports.paymentController = async (req, res) => {
 
   const { userId, cus_name, cus_email, cus_add1, cus_add2, cus_city, cus_state, cus_postcode, cus_phone } = req.body
 
@@ -97,8 +97,7 @@ const paymentController = async (req, res) => {
   }
 };
 
-// Getting order
-const getOrder = async (req, res) => {
+exports.singletOrder = async (req, res) => {
   const { id } = req.params
 
   try {
@@ -125,5 +124,21 @@ const getOrder = async (req, res) => {
   }
 }
 
+exports.allOrder = async(req, res) => {
+  try {
+    const order = await Order.find({});
 
-module.exports = { paymentController, getOrder }
+    return res.status(200).json({
+      success: false,
+      message: 'Fetching all Order successfully',
+      order
+    });
+
+  } catch (error) {
+      return res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    })
+  }
+}

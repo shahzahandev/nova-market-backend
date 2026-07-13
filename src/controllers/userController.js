@@ -1,7 +1,7 @@
 const User = require('../models/userModelSchema')
 
 // All user data
-let getAllUsersController = async (req, res) => {
+exports.getAllUsersController = async (req, res) => {
     try {
         const userData = await User.find({})
         return res.send({
@@ -19,7 +19,7 @@ let getAllUsersController = async (req, res) => {
 }
 
 // Single user data
-let singleUserController = async (req, res) => {
+exports.singleUserController = async (req, res) => {
     let { id } = req.params
 
     try {
@@ -39,7 +39,7 @@ let singleUserController = async (req, res) => {
 }
 
 // Delete user
-let deleteUserController = async (req, res) => {
+exports.deleteUserController = async (req, res) => {
     let { id } = req.params
 
     try {
@@ -58,7 +58,7 @@ let deleteUserController = async (req, res) => {
 }
 
 // Update user
-let updateUserController = async (req, res) => {
+exports.updateUserController = async (req, res) => {
     let { id } = req.params
 
     try {
@@ -76,5 +76,3 @@ let updateUserController = async (req, res) => {
         })
     }
 }
-
-module.exports = { getAllUsersController, singleUserController, deleteUserController, updateUserController }

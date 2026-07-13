@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
   }
 })
 
-const upload = multer({ storage: storage })
+exports.upload = multer({ storage: storage })
 
 
 // <=== Registration time image uploaders ===>
@@ -26,9 +26,4 @@ const storageUser = multer.diskStorage({
   }
 })
 
-const uploadUser = multer({ storage: storageUser })
-
-
-
-
-module.exports = {upload, uploadUser}
+exports.uploadUser = multer({ storage: storageUser })

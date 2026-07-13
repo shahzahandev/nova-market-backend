@@ -1,8 +1,7 @@
-// let emptyFillValidation = require('../utils/validation')
-let Product = require('../models/productModel')
+let Product = require('../models/productModel');
 
-// Create product
-let productController = async (req, res) => {
+
+exports.createProductController = async (req, res) => {
     let { title, price, category } = req.body
 
     try {
@@ -54,8 +53,7 @@ let productController = async (req, res) => {
     }
 }
 
-// Get all product
-let allProductController = async (req, res) => {
+exports.allProductController = async (req, res) => {
     try {
         let allProduct = await Product.find({})
         return res.status(200).json({
@@ -72,8 +70,7 @@ let allProductController = async (req, res) => {
     }
 }
 
-// sigle Product
-let singleProductController = async (req, res) => {
+exports.singleProductController = async (req, res) => {
     let { title } = req.body
 
     try {
@@ -92,8 +89,7 @@ let singleProductController = async (req, res) => {
     }
 }
 
-// Delete Product
-let deleteProductController = async (req, res) => {
+exports.deleteProductController = async (req, res) => {
     let { id } = req.body
     try {
         let deleteProductData = await Product.findByIdAndDelete({_id:id })
@@ -110,8 +106,7 @@ let deleteProductController = async (req, res) => {
     }
 }
 
-// Update Product
-let updateProductController = async(req, res) => {
+exports.updateProductController = async(req, res) => {
     let {id} = req.params
 
     try {
@@ -128,8 +123,3 @@ let updateProductController = async(req, res) => {
         })
     }
 }
-
-
-
-
-module.exports = { productController, allProductController, singleProductController, deleteProductController, updateProductController }

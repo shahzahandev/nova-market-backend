@@ -2,8 +2,7 @@ const Card = require('../models/cardModel');
 const Product = require('../models/productModel');
 
 
-//  Create Cart
-const createCart = async (req, res) => {
+exports.createCart = async (req, res) => {
     try {
         const { proid, userid } = req.body
 
@@ -54,8 +53,7 @@ const createCart = async (req, res) => {
 
 }
 
-// Cart Quantity increDecre
-const increDecre = async (req, res) => {
+exports.increDecre = async (req, res) => {
     try {
         const { id } = req.params // this id will be card id
         const { type, userid } = req.body
@@ -105,8 +103,7 @@ const increDecre = async (req, res) => {
     }
 }
 
-// Cart Delete
-const cartdelete = async (req, res) => {
+exports.cartdelete = async (req, res) => {
     try {
         const { id } = req.params
 
@@ -129,12 +126,11 @@ const cartdelete = async (req, res) => {
             success: false,
             message: 'Server Error',
             error: error.message
-        })
+        });
     }
 }
 
-// Get card Controller
-const getCard = async (req, res) => {
+exports.getSingleCard = async (req, res) => {
     try {
         const { userId } = req.params
 
@@ -159,4 +155,19 @@ const getCard = async (req, res) => {
     }
 }
 
-module.exports = { createCart, increDecre, cartdelete, getCard }
+exports.allCard = async(req, res) => {
+    try {
+         const card = await Card.find({});
+         return res.status(200).json({
+            success: false.valueOf,
+            message: 'Fetching all cart successfully',
+            card
+         });       
+    } catch (error) {
+          return res.status(500).json({
+            success: false,
+            message: 'Server Error',
+            error: error.message
+        });
+    }
+}

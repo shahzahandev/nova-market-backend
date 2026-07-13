@@ -11,7 +11,8 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-exports.mailVerification = async(token, email) => {
+
+let mailVerification = async(token, email) => {
     try {
         const info = await transporter.sendMail({
             from: `"Eco-Bazar Ecommerce", ${process.env.EMAIL_PASSWORD}`, // sender address
@@ -28,7 +29,12 @@ exports.mailVerification = async(token, email) => {
     // <=== Verification email proccess END ===>
 }
 
-exports.resetPassword = async(token, email) => {
+
+
+
+
+
+let resetPassword = async(token, email) => {
     try {
         const info = await transporter.sendMail({
             from: process.env.EMAIL_USER, // sender address
@@ -44,3 +50,5 @@ exports.resetPassword = async(token, email) => {
     }
     // <=== Verification email proccess END ===>
 }
+
+module.exports = {mailVerification, resetPassword}

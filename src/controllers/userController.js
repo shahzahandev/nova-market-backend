@@ -1,78 +1,117 @@
-const User = require('../models/userModelSchema')
+const User = require('../models/userModel')
 
-// All user data
+
 exports.getAllUsersController = async (req, res) => {
     try {
-        const userData = await User.find({})
-        return res.send({
+        const userData = await User.find({}).limit(10).select('-password')
+
+        return res.status(200).json({
             success: true,
-            message: 'All user data.',
+            message: 'Fatchin all user data.',
             userData: userData
-        })
+        });
+
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error.',
-            error: error
-        })
+            error: error.message
+        });
     }
 }
 
-// Single user data
 exports.singleUserController = async (req, res) => {
-    let { id } = req.params
+    let { id } = req.params;
 
     try {
-        let singleUserData = await User.findById(id)
-        return res.send({
+        let singleUserData = await User.findById(id).select('-password')
+
+        if (!singleUserData) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.'
+            });
+        }
+        return res.status(200).json({
             success: true,
-            message: `Single User data.`,
+            message: `Fatchin Single User data.`,
             user: singleUserData
         })
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error.',
-            error: error
-        })
+            error: error.message
+        });
     }
 }
 
-// Delete user
 exports.deleteUserController = async (req, res) => {
-    let { id } = req.params
+    let { id } = req.params;
 
     try {
-        let deleteUserData = await User.findByIdAndDelete(id)
-        return res.send({
+        let deleteUserData = await User.findByIdAndDelete(id);
+
+        if (!deleteUserData) {
+            return res.status(404).json({
+                success: true,
+                message: `User Not Found.`
+            });
+        }
+        return res.status(500).json({
             success: true,
             message: `User deleted successfully.`
-        })
+        });
+
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error.',
-            error: error
-        })
+            error: error.message
+        });
     }
 }
 
-// Update user
 exports.updateUserController = async (req, res) => {
-    let { id } = req.params
+    let { id } = req.params;
+    let {email} = req.body
 
     try {
-        let updateUserData = await User.findByIdAndUpdate({ _id: id }, req.body, { new: true })
-        return res.send({
+        let updateUserData = await User.findByIdAndUpdate({ _id: id }, {email}, { new: true });
+
+          if (!updateUserData) {
+            return res.status(404).json({
+                success: true,
+                message: `User Not Found.`
+            });
+        }
+
+      if(email){
+          return res.status(200).json({
             success: true,
             message: `User updated successfully done.`,
-            updateUser: updateUserData
-        })
+            updateUser: {
+                email: updateUserData.email,
+                id: updateUserData._id,
+                role: updateUserData.role
+            }
+        });
+      } else {
+         return res.status(400).json({
+            success: false,
+            message: `You can't update it. It's only for Admin.`
+        });
+      }
+
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error.',
-            error: error
-        })
+            error: error.message
+        });
     }
 }

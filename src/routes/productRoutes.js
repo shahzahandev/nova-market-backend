@@ -6,7 +6,7 @@ const { upload } = require('../config/imageStorage');
 router.post('/createProduct', upload.array('photos', 5), createProductController);
 router.get('/allProduct', allProductController);
 router.post('/singleProduct', singleProductController);
-router.delete('/deleteProduct', deleteProductController);
+router.delete('/deleteProduct/:id', deleteProductController);
 router.post('/updateProduct/:id', updateProductController);
 
 module.exports = router;

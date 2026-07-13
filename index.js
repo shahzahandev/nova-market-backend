@@ -13,21 +13,24 @@ const orderRoutes = require('./src/routes/orderRoutes');
 
 
 // <==== middleware ====>
-app.use(express.json());
-app.use(cors());
+app.use(express.json({ limit: '10kb' }));
+app.use(cors({
+    origin: process.env.FRONEND_URL || 'http://localhost:5173',
+    Credentials: true
+}));
 
 // <==== Database connetion =====>
 dbConnection();
 
 // <==== Rotue =====>
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/user', userRoutes);
-app.use('/api/v1/product', productRoutes);
-app.use('/api/v1/cart', cartRoutes);
-app.use('/api/v1/order', orderRoutes);
+app.use('/api/v1/auth', authRoutes);   // checked
+app.use('/api/v1/user', userRoutes);   // checked
+app.use('/api/v1/product', productRoutes);  // checked
+app.use('/api/v1/cart', cartRoutes);   // checked
+app.use('/api/v1/order', orderRoutes);  // checked
 
 // <==== PORT ====> 
 const port = process.env.PORT || 5000
-app.listen(port, (req, res) => {
+app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

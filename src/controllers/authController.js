@@ -1,6 +1,6 @@
-const User = require('./userController');
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcryptjs");
+const User = require('../models/userModel')
 
 const { mailVerification, resetPassword } = require('../utils/email');
 const { tokenGenerator } = require('../utils/tokenGenerator');
@@ -43,8 +43,8 @@ exports.registrationController = async (req, res) => {
         // <=== MongoDB saving proccess START ===>
         const hash = bcrypt.hashSync(password, 10);
         let user = new User({
-            email, 
-            password: hash, 
+            email,
+            password: hash,
             terms
         });
         await user.save();
@@ -53,10 +53,10 @@ exports.registrationController = async (req, res) => {
         let token = tokenGenerator({
             id: user._id,
             email: user.email
-        }, 
-        process.env.TOKEN_SECRET,
-        process.env.JWT_EXPIRES
-    )
+        },
+            process.env.JWT_SECRET_KEY,
+            process.env.JWT_ACCESS_TOKEN_EXPIRY
+        )
 
         // <===  Mail Verification ===>
         mailVerification(token, email)
@@ -68,44 +68,39 @@ exports.registrationController = async (req, res) => {
         })
         // <=== MongoDB saving proccess END ===>
     } catch (error) {
-        console.log(error)
+        console.log(error);
         return res.status(500).json({
             success: false,
-            message: "Internal server error. Please try again later.",
+            message: "Internal server error.",
             error: error.message
-        })
+        });
     }
 }
 
 exports.loginController = async (req, res) => {
-    const { email, password } = req.body
+    const { email, password } = req.body;
 
     try {
-        // <=== Access user by Email ===>
-        let existingUser = await User.findOne({ email: email })
+        let existingUser = await User.findOne({ email: email });
 
-        // <=== If User already Avaiable ===>
         if (!existingUser) {
-           return res.status(404).json({
+            return res.status(404).json({
                 success: false,
                 message: "No account found with this email address."
             })
         }
-
         // <=== if email & password are empty ===>
         emptyFillValidation(res, email, password)
 
         // <=== Password matching proccess ===>
         let pass = bcrypt.compareSync(password, existingUser.password);
         if (!pass) {
-            // <=== If password not matching ===> 
-               return res.status(401).json({
+            return res.status(401).json({
                 success: false,
                 message: "Invalid email or password."
-            })
-        } else {
-            // <=== If password matching ===> 
-           return res.status(200).json({
+            });
+        }
+        return res.status(200).json({
             success: true,
             message: "Login completed successfully.",
             data: {
@@ -113,30 +108,28 @@ exports.loginController = async (req, res) => {
                 email: existingUser.email
             }
         })
-        }
+
     } catch (error) {
-        // <=== Server Error ===>
+        console.log(error);
         return res.status(500).json({
             success: false,
-            message: "Internal server error. Please try again later.",
+            message: "Internal server error.",
             error: error.message
         })
     }
 }
 
 exports.forgotPasswordController = async (req, res) => {
-    let { email } = req.body
+    let { email } = req.body;
 
     try {
-        // <=== Access user by Email ===>
-        let existingUser = await User.findOne({ email})
+        let existingUser = await User.findOne({ email });
 
-        // <=== If User already Avaiable ===>
         if (!existingUser) {
-             return res.status(404).json({
+            return res.status(404).json({
                 success: false,
                 message: "No account found with this email address."
-            })
+            });
         }
 
         // <=== When email is empty ===>
@@ -146,68 +139,65 @@ exports.forgotPasswordController = async (req, res) => {
         let token = tokenGenerator({
             id: existingUser._id,
             email: existingUser.email
-        }, process.env.TOKEN_SECRET,
-            process.env.JWT_EXPIRES)
+        }, process.env.JWT_SECRET_KEY,
+            process.env.JWT_ACCESS_TOKEN_EXPIRY)
 
         // <===  Mail Verification ===>
         await resetPassword(token, email)
-
-       // <=== Success Response ===>
+        console.log(token);
+        // <=== Success Response ===>
         return res.status(200).json({
             success: true,
             message: "Password reset link has been sent to your email address."
-        })
+        });
     } catch (error) {
-        // <=== Server Error ===>
+        console.log(error);
         return res.status(500).json({
             success: false,
-            message: "Internal server error. Please try again later.",
+            message: "Internal server error.",
             error: error.message
-        })
+        });
     }
 }
 
-exports.reSetPasswordController = async(req, res) => {
-    let { newPassword, confirmPassword } = req.body
-    let { token } = req.params
+exports.reSetPasswordController = async (req, res) => {
+    let { newPassword, confirmPassword } = req.body;
+    let { token } = req.params;
 
     try {
         if (newPassword !== confirmPassword) {
-            return res.send({
+            return res.status(400).json({
                 success: false,
                 message: "Don't match password."
-            })
+            });
         }
-
         // <=== token decoded ===>
-        jwt.verify(token, process.env.TOKEN_SECRET, async function (err, decoded) {
+        jwt.verify(token, process.env.JWT_SECRET_KEY, async function (err, decoded) {
             console.log(token);
-            
             if (err) {
                 console.log(err);
-                
-                return res.send({
+                return res.status(400).json({
                     success: false,
-                    message: "Unauthorized." 
-                })
-                
+                    message: "Unauthorized."
+                });
+
             } else {
                 console.log(decoded);
-                
                 let hash = bcrypt.hashSync(newPassword, 10)
                 let updateData = await User.findByIdAndUpdate(decoded.id, { password: hash })
-                return res.send({
+                return res.status(200).json({
                     success: true,
                     message: 'Password updated.'
-                })
+                });
             }
         });
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error',
-            error: error
-        })
+            error: error.message
+        });
     }
 }
 
@@ -222,57 +212,63 @@ exports.resendEmailVerificationController = async (req, res) => {
         let token = tokenGenerator({
             id: existingUser._id,
             email: existingUser.email
-        }, process.env.TOKEN_SECRET,
-            process.env.JWT_EXPIRES)
+        }, process.env.JWT_SECRET_KEY,
+            process.env.JWT_ACCESS_TOKEN_EXPIRY
+        )
 
         // <===  Mail Verification ===>
         mailVerification(token, email)
 
         // <===If everything is ok, then Response message ===>
-        return res.send({
+        return res.status(200).json({
             success: true,
             message: 'Check your email for Verification'
-        })
+        });
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error',
-            error: error
-        })
+            error: error.message
+        });
     }
 }
 
 exports.verifyEmailController = async (req, res) => {
-    const { token } = req.params
+    const { token } = req.params;
 
     try {
-        jwt.verify(token, process.env.TOKEN_SECRET, async function (err, decoded) {
+        jwt.verify(token, process.env.JWT_SECRET_KEY, async function (err, decoded) {
             if (err) {
-                return res.send({ message: "Unauthorization." })
+                return res.status(400).json({ 
+                    success: false,
+                    message: "Unauthorization." 
+                });
             } else {
                 const userId = decoded.id
                 let findUser = await User.findById(userId)
                 if (findUser.isVerified) {
-                    return res.send({
-                        success: true,
+                    return res.status(400).json({
+                        success: false,
                         message: 'User already verified.'
-                    })
+                    });
                 } else {
                     findUser.isVerified = true
-                    findUser.save()
-                    return res.send({
+                    await findUser.save();
+                    return res.status(200).json({
                         success: true,
                         message: 'Email verified successfully.'
-                    })
+                    });
                 }
             }
         });
-        
+
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).json({
             success: false,
             message: 'Server error',
-            error: error
+            error: error.message
         })
     }
 }

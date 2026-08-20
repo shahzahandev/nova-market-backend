@@ -59,11 +59,11 @@ let productSchema = new Schema({
         {
             url:{
                 type: String,
-                isMain:{
+            },
+            isMain:{
                     type: Boolean,
                     default: false
                 },
-            }
         }
     ]
 }, {timestamps: true})

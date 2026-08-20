@@ -49,6 +49,11 @@ let userModelSchema = new Schema({
         default: false
 
     },
+    status:{
+        type: String,
+        emum:['active', 'delete'],
+        default: 'active'
+    },
 
     billingAddress: {
         firstName: {

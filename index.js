@@ -14,6 +14,7 @@ const orderRoutes = require('./src/routes/orderRoutes');
 
 // <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
+
 app.use(cors({
     origin: process.env.FRONEND_URL || 'http://localhost:5173',
     Credentials: true
@@ -30,7 +31,7 @@ app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
 
 // <==== PORT ====> 
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 3000
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

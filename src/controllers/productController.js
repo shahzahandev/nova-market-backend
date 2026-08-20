@@ -73,12 +73,12 @@ exports.allProductController = async (req, res) => {
 }
 
 exports.singleProductController = async (req, res) => {
-    let { title } = req.body;
+    let {id} = req.params
 
     try {
-        let singleProductData = await Product.findOne({ title });
+        let singleProductData = await Product.findOne({ _id : id });
 
-        if (!title) {
+        if (!id) {
             return res.status(404).json({
                 success: false,
                 message: 'Product Not Found.'

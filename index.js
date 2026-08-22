@@ -10,6 +10,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const productRoutes = require('./src/routes/productRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
+const path = require('path');
 
 
 // <==== middleware ====>
@@ -29,6 +30,11 @@ app.use('/api/v1/user', userRoutes);   // checked
 app.use('/api/v1/product', productRoutes);  // checked
 app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
+
+
+// app.use("/upload", express.static(path.join(__dirname, "upload")));
+app.use('/upload', express.static(path.join(__dirname, 'src/upload')));
+
 
 // <==== PORT ====> 
 const port = process.env.PORT || 3000

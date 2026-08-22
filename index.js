@@ -16,10 +16,23 @@ const path = require('path');
 // <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
 
-app.use(cors({
-    origin: process.env.FRONEND_URL || 'http://localhost:5173',
-    Credentials: true
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://nova-market-frontend.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // <==== Database connetion =====>
 dbConnection();

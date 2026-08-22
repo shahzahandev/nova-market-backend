@@ -317,12 +317,9 @@ exports.createProductController = async (req, res) => {
                     });
                 }
                 finalDiscountPrice = numericPrice - numericDiscountPrice;
-            }
 
-
-         // Percentage discount
-         else if ( discountType === "percentage") {
-                if ( numericDiscountPrice <= 0 ||numericDiscountPrice > 100) {
+            } else if ( discountType === "percentage") {
+                if ( numericDiscountPrice < 0 || numericDiscountPrice > 100) {
                     return res.status(400).json({
                         success: false,
                         message: "Percentage discount must be between 1 and 100.",

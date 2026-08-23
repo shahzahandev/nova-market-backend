@@ -19,6 +19,7 @@ app.use(express.json({ limit: '10kb' }));
 const allowedOrigins = [
   "http://localhost:5173",
   "https://nova-market-frontend.vercel.app",
+  "http://localhost:5174"
 ];
 
 app.use(

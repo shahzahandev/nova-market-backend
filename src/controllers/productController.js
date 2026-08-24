@@ -8,11 +8,28 @@ const path = require('path');
 
 exports.createProductController = async (req, res) => {
     try {
-        const { title, description, shortDescription, price, discountType, discountPrice, discountStartDate, discountEndDate,
-            stock, brand, category, subCategory, tag, additionalInfo, status, specifications, features, isMain,} = req.body;
+        const { title,
+            description,
+            shortDescription,
+            price,
+            discountType,
+            discountValue,
+            discountPrice,
+            discountStartDate,
+            discountEndDate,
+            stock,
+            brand,
+            category,
+            subCategory,
+            tag,
+            additionalInfo,
+            status,
+            specifications,
+            features,
+            isMain, } = req.body;
 
-        if ( !title || price === undefined || price === "" ||
-            !category || stock === undefined || stock === "" ) {
+        if (!title || price === undefined || price === "" ||
+            !category || stock === undefined || stock === "") {
             return res.status(400).json({
                 success: false,
                 message: "Title, price, category and stock are required.",
@@ -21,10 +38,9 @@ exports.createProductController = async (req, res) => {
         // Convert numbers
         const numericPrice = Number(price);
         const numericStock = Number(stock);
-        const numericDiscountPrice = Number(discountPrice) || 0;
-
+        const numericDiscountValue = Number(discountValue) || 0;
         // Price validation
-        if ( Number.isNaN(numericPrice) || numericPrice <= 0) {
+        if (Number.isNaN(numericPrice) || numericPrice <= 0) {
             return res.status(400).json({
                 success: false,
                 message: "Price must be greater than 0.",
@@ -32,7 +48,7 @@ exports.createProductController = async (req, res) => {
         }
 
         // Stock validation
-        if (Number.isNaN(numericStock) || numericStock < 0 ) {
+        if (Number.isNaN(numericStock) || numericStock < 0) {
             return res.status(400).json({
                 success: false,
                 message: "Stock cannot be negative.",
@@ -50,36 +66,55 @@ exports.createProductController = async (req, res) => {
                 message: "Product already exists.",
             });
         }
+        // ---------------------------------
         // Discount
-        const hasDiscount = discountType && discountType !== "none";
+        // ---------------------------------
 
-        let finalDiscountPrice = 0;
+        const hasDiscount =
+            discountType && discountType !== "none";
+
+        let finalDiscountPrice = numericPrice;
         let finalDiscountStartDate;
         let finalDiscountEndDate;
 
         if (hasDiscount) {
+
             // Discount dates required
-            if (!discountStartDate || !discountEndDate ) {
+            if (!discountStartDate || !discountEndDate) {
                 return res.status(400).json({
                     success: false,
-                    message:"Discount start and end dates are required when discount is enabled.",
+                    message:
+                        "Discount start and end dates are required when discount is enabled.",
                 });
             }
 
             // Date conversion
-            const startDate = new Date( discountStartDate );
-            const endDate = new Date(discountEndDate );
+            const startDate = new Date(discountStartDate);
+            const endDate = new Date(discountEndDate);
             const currentDate = new Date();
+
             // Normalize date
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(0, 0, 0, 0);
             currentDate.setHours(0, 0, 0, 0);
 
+            // Invalid date check
+            if (
+                Number.isNaN(startDate.getTime()) ||
+                Number.isNaN(endDate.getTime())
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid discount date.",
+                });
+            }
+
             // Start date cannot be before today
             if (startDate < currentDate) {
                 return res.status(400).json({
                     success: false,
-                    message: "Discount start date cannot be earlier than today.",
+                    message:
+                        "Discount start date cannot be earlier than today.",
                 });
             }
 
@@ -87,62 +122,85 @@ exports.createProductController = async (req, res) => {
             if (endDate < startDate) {
                 return res.status(400).json({
                     success: false,
-                    message: "Discount end date cannot be earlier than start date.",
+                    message:
+                        "Discount end date cannot be earlier than start date.",
                 });
             }
-            // Discount price validation
-            if (Number.isNaN(numericDiscountPrice) || numericDiscountPrice < 0) {
+
+            // Discount value validation
+            if (
+                Number.isNaN(numericDiscountValue) ||
+                numericDiscountValue <= 0
+            ) {
                 return res.status(400).json({
                     success: false,
-                    message:"Discount price cannot be negative.",
+                    message:
+                        "Discount value must be greater than 0.",
                 });
             }
 
-            // Flat discount
+            // ---------------------------------
+            // Flat Discount
+            // ---------------------------------
+
             if (discountType === "flat") {
 
-                if (numericDiscountPrice <= 0) {
+                if (numericDiscountValue >= numericPrice) {
                     return res.status(400).json({
                         success: false,
-                        message: "Discount amount must be greater than 0.",
+                        message:
+                            "Discount amount must be less than the original price.",
                     });
                 }
 
-                if ( numericDiscountPrice >= numericPrice) {
+                finalDiscountPrice =
+                    numericPrice - numericDiscountValue;
+            }
+
+            // ---------------------------------
+            // Percentage Discount
+            // ---------------------------------
+
+            else if (discountType === "percentage") {
+
+                if (
+                    numericDiscountValue <= 0 ||
+                    numericDiscountValue > 100
+                ) {
                     return res.status(400).json({
                         success: false,
-                        message:"Discount price must be less than the original price.",
+                        message:
+                            "Percentage discount must be between 1 and 100.",
                     });
                 }
-                finalDiscountPrice = numericPrice - numericDiscountPrice;
 
-            } else if ( discountType === "percentage") {
-                if ( numericDiscountPrice < 0 || numericDiscountPrice > 100) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Percentage discount must be between 1 and 100.",
-                    });
-                }
-                finalDiscountPrice =numericPrice - (numericPrice * numericDiscountPrice) / 100;
+                finalDiscountPrice =
+                    numericPrice -
+                    (numericPrice * numericDiscountValue) / 100;
 
-                // Prevent 0 price
+                // Prevent zero/negative price
                 if (finalDiscountPrice <= 0) {
                     return res.status(400).json({
                         success: false,
-                        message:"Discount cannot reduce the product price to 0.",
+                        message:
+                            "Discount cannot reduce the product price to 0.",
                     });
                 }
             }
 
-            // Unknown discount type
+            // ---------------------------------
+            // Invalid Discount Type
+            // ---------------------------------
+
             else {
                 return res.status(400).json({
                     success: false,
-                    message:"Invalid discount type.",
+                    message: "Invalid discount type.",
                 });
             }
-            finalDiscountStartDate = discountStartDate;
-            finalDiscountEndDate = discountEndDate;
+
+            finalDiscountStartDate = startDate;
+            finalDiscountEndDate = endDate;
         }
         // Parse Tags
         let parsedTags = [];
@@ -157,13 +215,13 @@ exports.createProductController = async (req, res) => {
                 }
 
                 parsedTags = parsedTags.map((item) =>
-                        String(item).trim()
-                    ).filter(Boolean);
+                    String(item).trim()
+                ).filter(Boolean);
             } catch (error) {
                 // Fallback if comma separated string
-                parsedTags = tag .split(",").map((item) =>
-                        item.trim()
-                    ) .filter(Boolean);
+                parsedTags = tag.split(",").map((item) =>
+                    item.trim()
+                ).filter(Boolean);
             }
         }
         // Parse Features
@@ -171,19 +229,19 @@ exports.createProductController = async (req, res) => {
 
         if (features) {
             try {
-                parsedFeatures =typeof features === "string" ? JSON.parse(features) : features;
-                if ( !Array.isArray( parsedFeatures)) {
+                parsedFeatures = typeof features === "string" ? JSON.parse(features) : features;
+                if (!Array.isArray(parsedFeatures)) {
                     parsedFeatures = [];
                 }
 
                 parsedFeatures = parsedFeatures.map((item) =>
-                            String(item).trim()
-                        ) .filter(Boolean);
+                    String(item).trim()
+                ).filter(Boolean);
             } catch (error) {
                 // Fallback if comma separated
-                parsedFeatures = features.split(",") .map((item) =>
-                        item.trim()
-                    ) .filter(Boolean);
+                parsedFeatures = features.split(",").map((item) =>
+                    item.trim()
+                ).filter(Boolean);
             }
         }
         // Parse Specifications
@@ -191,28 +249,29 @@ exports.createProductController = async (req, res) => {
 
         if (specifications) {
             try {
-                parsedSpecifications = typeof specifications === "string" ? JSON.parse( specifications ) : specifications;
-                if ( !Array.isArray( parsedSpecifications)) {
+                parsedSpecifications = typeof specifications === "string" ? JSON.parse(specifications) : specifications;
+                if (!Array.isArray(parsedSpecifications)) {
                     parsedSpecifications = [];
                 }
 
                 parsedSpecifications = parsedSpecifications.filter((spec) =>
-                                spec && spec.name && spec.value).map((spec) => ({name: String( spec.name).trim(),
-                            value: String(
-                                spec.value
-                            ).trim(),
-                        }));
+                    spec && spec.name && spec.value).map((spec) => ({
+                        name: String(spec.name).trim(),
+                        value: String(
+                            spec.value
+                        ).trim(),
+                    }));
 
             } catch (error) {
                 return res.status(400).json({
                     success: false,
-                    message:"Invalid specifications format.",
+                    message: "Invalid specifications format.",
                 });
             }
         }
         // Images
         const files = req.files || [];
-        const mainIndex =Number.isInteger(Number(isMain)) ? Number(isMain) : 0;
+        const mainIndex = Number.isInteger(Number(isMain)) ? Number(isMain) : 0;
 
         const images = files.map(
             (file, index) => ({
@@ -221,11 +280,11 @@ exports.createProductController = async (req, res) => {
             })
         );
 
-        if ( images.length > 0 && !images.some((image) => image.isMain)) {
+        if (images.length > 0 && !images.some((image) => image.isMain)) {
             images[0].isMain = true;
         }
 
-       let sku = `${Date.now() + Math.random()}`;
+        let sku = `${Date.now() + Math.random()}`;
 
         const product = new Product({
             title: title.trim(),
@@ -252,14 +311,14 @@ exports.createProductController = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message:"Product created successfully.",
+            message: "Product created successfully.",
             product,
         });
     } catch (error) {
-        console.log("Create product error:",error);
+        console.log("Create product error:", error);
         return res.status(500).json({
             success: false,
-            message:"Internal server error. Please try again later.",
+            message: "Internal server error. Please try again later.",
             error: error.message,
         });
     }
@@ -334,10 +393,10 @@ exports.allActiveProduct = async (req, res) => {
 }
 
 exports.singleProductController = async (req, res) => {
-    let {id} = req.params
+    let { id } = req.params
 
     try {
-        let singleProductData = await Product.findOne({ _id : id });
+        let singleProductData = await Product.findOne({ _id: id });
 
         if (!id) {
             return res.status(404).json({
@@ -612,7 +671,7 @@ exports.updateProductController = async (req, res) => {
                     console.log("Deleted old image:", filePath);
                 }
             } catch (deleteError) {
-                console.error("Failed to delete old image:", image.url, deleteError.message );
+                console.error("Failed to delete old image:", image.url, deleteError.message);
             }
         }
         let uploadedImages = [];
@@ -660,7 +719,7 @@ exports.updateProductController = async (req, res) => {
             success: true,
             message: "Product updated successfully",
             product,
-            removedImages: removedImages.map( (image) => image.url),
+            removedImages: removedImages.map((image) => image.url),
         });
 
     } catch (error) {
@@ -670,7 +729,7 @@ exports.updateProductController = async (req, res) => {
         if (error.code === 11000) {
             return res.status(409).json({
                 success: false,
-                message:"Product title or SKU already exists",
+                message: "Product title or SKU already exists",
                 error: error.message,
             });
         }
@@ -711,7 +770,7 @@ exports.createCategoryController = async (req, res) => {
         });
 
 
-        if(existingCategory){
+        if (existingCategory) {
             return res.status(400).json({
                 success: false,
                 message: 'This Catagorey already exists'

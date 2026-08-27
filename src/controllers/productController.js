@@ -14,7 +14,6 @@ exports.createProductController = async (req, res) => {
             price,
             discountType,
             discountValue,
-            discountPrice,
             discountStartDate,
             discountEndDate,
             stock,
@@ -70,8 +69,7 @@ exports.createProductController = async (req, res) => {
         // Discount
         // ---------------------------------
 
-        const hasDiscount =
-            discountType && discountType !== "none";
+        const hasDiscount = discountType && discountType !== "none";
 
         let finalDiscountPrice = numericPrice;
         let finalDiscountStartDate;
@@ -284,7 +282,48 @@ exports.createProductController = async (req, res) => {
             images[0].isMain = true;
         }
 
-        let sku = `${Date.now() + Math.random()}`;
+        const titlePrefix = title
+            .trim()
+            .replace(/[^a-zA-Z]/g, "")
+            .slice(0, 3)
+            .toUpperCase();
+
+        const currentDate = new Date();
+
+        const day = String( currentDate.getDate()).padStart(2, "0");
+        const month = String( currentDate.getMonth() + 1 ).padStart(2, "0");
+        const year = currentDate.getFullYear();
+
+        const baseSku = `${titlePrefix}${day}${month}${year}`;
+
+        let sku;
+let isDuplicate = true;
+
+// যতক্ষণ duplicate SKU পাওয়া যাবে,
+// ততক্ষণ নতুন 3 digit number generate করবে
+while (isDuplicate) {
+    const randomNumber = Math.floor(
+        100 + Math.random() * 900
+    );
+
+    sku = `${baseSku}${randomNumber}`;
+
+    const existingSku = await Product.findOne({ sku });
+
+    if (!existingSku) {
+        isDuplicate = false;
+    }
+}
+
+        // SKU Duplicate Check
+        const existingSku = await Product.findOne({sku});
+
+        if (existingSku) {
+            return res.status(400).json({
+                success: false,
+                message: "A product with this SKU already exists. Please use a different product title.",
+            });
+        }
 
         const product = new Product({
             title: title.trim(),

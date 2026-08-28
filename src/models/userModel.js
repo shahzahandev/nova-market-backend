@@ -1,12 +1,8 @@
 const mongoose = require('mongoose')
-const suceMiddleWare = require('../middleWare/suceMiddleWare')
 const { Schema } = mongoose
 
 let userModelSchema = new Schema({
-    firstName: {
-        type: String
-    },
-    lastName: {
+    name: {
         type: String
     },
     email: {
@@ -21,13 +17,16 @@ let userModelSchema = new Schema({
         type: String,
         required: [true, 'Password is required'],
         minLength: 8,
-        select: true,
+        select: false,
         // match: [/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, 'Please enter a stronger password'],
     },
-    phoneNumber: {
+    phone: {
         type: String,
         unique: true,
         sparse: true,
+        trim: true,
+        match: [/^(?:\+88)?01[3-9]\d{8}$/, "Please enter a valid Bangladeshi phone number",
+        ],
     },
     terms: {
         type: Boolean
@@ -49,10 +48,19 @@ let userModelSchema = new Schema({
         default: false
 
     },
-    status:{
+    status: {
         type: String,
-        emum:['active', 'delete'],
+        emum: ['active', 'delete'],
         default: 'active'
+    },
+    address: {
+        type: String
+    },
+    postalCode: {
+        type: String
+    },
+    city: {
+        type: String
     },
 
     billingAddress: {

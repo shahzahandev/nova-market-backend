@@ -8,7 +8,7 @@ const { emptyFillValidation } = require('../utils/validation');
 
 
 exports.registrationController = async (req, res) => {
-    const { email, password, confirmPassword, terms } = req.body
+    const { name, email, password, confirmPassword, terms } = req.body
 
     try {
         // <=== Access user by Email ===>
@@ -22,8 +22,12 @@ exports.registrationController = async (req, res) => {
             });
         }
 
-        // <=== if email, password & confirm password terms are empty ===>
-        emptyFillValidation(res, email, password, confirmPassword, terms)
+        if (!name || !email || !password || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Fill the all field please."
+            });
+        }
 
         // <=== if password & Confirm password don't match ===>
         if (password !== confirmPassword) {
@@ -43,6 +47,7 @@ exports.registrationController = async (req, res) => {
         // <=== MongoDB saving proccess START ===>
         const hash = bcrypt.hashSync(password, 10);
         let user = new User({
+            name,
             email,
             password: hash,
             terms
@@ -64,7 +69,9 @@ exports.registrationController = async (req, res) => {
         return res.status(201).json({
             success: true,
             message: "Account created successfully. Please verify your email.",
-            userEmail: user.email
+            name: user.name,
+            email: user.email,
+
         })
         // <=== MongoDB saving proccess END ===>
     } catch (error) {
@@ -81,7 +88,7 @@ exports.loginController = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        let existingUser = await User.findOne({ email: email });
+        let existingUser = await User.findOne({ email: email }).select("+password");
 
         if (!existingUser) {
             return res.status(404).json({
@@ -90,7 +97,13 @@ exports.loginController = async (req, res) => {
             })
         }
         // <=== if email & password are empty ===>
-        emptyFillValidation(res, email, password)
+        // emptyFillValidation(res, email, password)
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required.",
+            });
+        }
 
         // <=== Password matching proccess ===>
         let pass = bcrypt.compareSync(password, existingUser.password);
@@ -100,14 +113,19 @@ exports.loginController = async (req, res) => {
                 message: "Invalid email or password."
             });
         }
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             message: "Login completed successfully.",
-            data: {
-                userId: existingUser._id,
-                email: existingUser.email
+            existingUser: {
+                _id: existingUser._id,
+                name: existingUser.name,
+                email: existingUser.email,
+                phone: existingUser.phone,
+                address: existingUser.address,
+                city: existingUser.city,
+                postalCode: existingUser.postalCode,
             }
-        })
+            });
 
     } catch (error) {
         console.log(error);
@@ -133,7 +151,13 @@ exports.forgotPasswordController = async (req, res) => {
         }
 
         // <=== When email is empty ===>
-        emptyFillValidation(res, email)
+        // emptyFillValidation(res, email)
+        if(!email){
+              return res.status(404).json({
+                success: false,
+                message: "fill the input."
+            });
+        }
 
         // <=== Token Genarate ===>
         let token = tokenGenerator({
@@ -240,9 +264,9 @@ exports.verifyEmailController = async (req, res) => {
     try {
         jwt.verify(token, process.env.JWT_SECRET_KEY, async function (err, decoded) {
             if (err) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     success: false,
-                    message: "Unauthorization." 
+                    message: "Unauthorization."
                 });
             } else {
                 const userId = decoded.id
@@ -273,4 +297,3 @@ exports.verifyEmailController = async (req, res) => {
     }
 }
 
-// ndmt uxan reaf igve

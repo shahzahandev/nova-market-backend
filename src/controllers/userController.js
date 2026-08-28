@@ -36,7 +36,7 @@ exports.singleUserController = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: `Fatchin Single User data.`,
-            user: singleUserData
+            singleUserData
         })
     } catch (error) {
         console.log(error);
@@ -77,34 +77,27 @@ exports.deleteUserController = async (req, res) => {
 
 exports.updateUserController = async (req, res) => {
     let { id } = req.params;
-    let {email} = req.body
+      const { name, phone, city, postalCode, address } = req.body;
 
     try {
-        let updateUserData = await User.findByIdAndUpdate({ _id: id }, {email}, { new: true });
+        // let updateUserData = await User.findByIdAndUpdate({ _id: id }, req.body, { new: true }).select('-password');
+        const user = await User.findByIdAndUpdate(id, { name, phone, city, postalCode, address }, { new: true, runValidators: true });
 
-          if (!updateUserData) {
+
+          if (!user) {
             return res.status(404).json({
                 success: true,
                 message: `User Not Found.`
             });
         }
+        
 
-      if(email){
           return res.status(200).json({
             success: true,
             message: `User updated successfully done.`,
-            updateUser: {
-                email: updateUserData.email,
-                id: updateUserData._id,
-                role: updateUserData.role
-            }
+            user
         });
-      } else {
-         return res.status(400).json({
-            success: false,
-            message: `You can't update it. It's only for Admin.`
-        });
-      }
+   
 
     } catch (error) {
         console.log(error);

@@ -16,8 +16,9 @@ const orderRoutes = require('./src/routes/orderRoutes');
 app.use(express.json({ limit: '10kb' }));
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://nova-market-frontend.vercel.app",
-  "http://localhost:5174"
+  "https://nova-market-dashboard.vercel.app"
 ];
 
 app.use(

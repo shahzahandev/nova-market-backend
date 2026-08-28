@@ -168,7 +168,6 @@ exports.forgotPasswordController = async (req, res) => {
 
         // <===  Mail Verification ===>
         await resetPassword(token, email)
-        console.log(token);
         // <=== Success Response ===>
         return res.status(200).json({
             success: true,

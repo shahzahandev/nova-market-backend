@@ -6,9 +6,9 @@ const { registrationController, loginController, forgotPasswordController, reSet
 router.post('/register', registrationController);
 router.post('/login', loginController);
 router.post('/forgotPassword', forgotPasswordController);
-router.post("/resetPassword/:token", reSetPasswordController);
+router.post("/resetpassword/:token", reSetPasswordController);
 router.post("/resendEmailVerification", resendEmailVerificationController);
-router.post("/verifyEmailController/:token", verifyEmailController);
+router.post("/verifyemail/:token", verifyEmailController);
 
 
 module.exports = router;

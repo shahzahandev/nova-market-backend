@@ -6,7 +6,7 @@ const router = express.Router();
 
 
 
-router.post('/heroSlider', uploadHeroImg.array('images', 6), upsertHeroSliderController);
-router.get('/heroSlider', getHeroSliderController);
+router.post('/createHeroSlider', uploadHeroImg.array('images', 6), upsertHeroSliderController);
+router.get('/getHeroSlider', getHeroSliderController);
 
 module.exports = router;

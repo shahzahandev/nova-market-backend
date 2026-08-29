@@ -11,6 +11,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const productRoutes = require('./src/routes/productRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
+const bannerRoutes = require('./src/routes/bannerRoutes');
 
 // <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
@@ -43,6 +44,7 @@ app.use('/api/v1/user', userRoutes);   // checked
 app.use('/api/v1/product', productRoutes);  // checked
 app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
+app.use('/api/v1/banner', bannerRoutes)
 
 // app.use("/upload", express.static(path.join(__dirname, "upload")));
 app.use('/upload', express.static(path.join(__dirname, 'src/upload')));

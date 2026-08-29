@@ -51,4 +51,4 @@ let resetPassword = async(token, email) => {
     // <=== Verification email proccess END ===>
 }
 
-module.exports = {mailVerification, resetPassword}
+module.exports = {mailVerification, resetPassword }

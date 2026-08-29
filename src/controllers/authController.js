@@ -4,8 +4,6 @@ const User = require('../models/userModel')
 
 const { mailVerification, resetPassword } = require('../utils/email');
 const { tokenGenerator } = require('../utils/tokenGenerator');
-const { emptyFillValidation } = require('../utils/validation');
-
 
 exports.registrationController = async (req, res) => {
     const { name, email, password, confirmPassword, terms } = req.body

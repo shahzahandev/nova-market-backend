@@ -62,14 +62,13 @@ exports.registrationController = async (req, res) => {
         )
 
         // <===  Mail Verification ===>
-        mailVerification(token, email)
+        await mailVerification(token, email)
 
         return res.status(201).json({
             success: true,
             message: "Account created successfully. Please verify your email.",
             name: user.name,
             email: user.email,
-
         })
         // <=== MongoDB saving proccess END ===>
     } catch (error) {

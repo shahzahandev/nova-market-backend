@@ -19,8 +19,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://nova-market-frontend.vercel.app",
+  "https://nova-market-dashboard.vercel.app",
   "https://nova-market-dashboard.vercel.app"
 ];
+
 
 app.use(
   cors({

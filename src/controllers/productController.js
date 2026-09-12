@@ -787,9 +787,6 @@ exports.updateProductController = async (req, res) => {
     }
 };
 
-
-
-
 // Category ===============
 exports.createCategoryController = async (req, res) => {
     const { name } = req.body
@@ -855,6 +852,7 @@ exports.getAllCategoryController = async (req, res) => {
         });
     }
 }
+
 exports.deleteCategroyController = async (req, res) => {
     try {
        const {id} = req.params

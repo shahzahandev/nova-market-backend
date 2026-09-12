@@ -855,3 +855,28 @@ exports.getAllCategoryController = async (req, res) => {
         });
     }
 }
+exports.deleteCategroyController = async (req, res) => {
+    try {
+       const {id} = req.params
+       
+       const deleteCategroy = await Category.findByIdAndDelete(id)
+
+       if(!deleteCategroy){
+        return res.status(404).json({
+            success: false,
+            message: "Category not found"
+        });
+       }
+
+       return res.status(200).json({
+        success: true,
+        message: "Categroy deleted successfully"
+       });
+       
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server Error"
+        })
+    }
+}

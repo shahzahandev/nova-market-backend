@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createProductController, allProductController, singleProductController, deleteProductController, updateProductController, createCategoryController,getAllCategoryController, allActiveProduct, allActiveAndDiscountProduct } = require('../controllers/productController');
+const { createProductController, allProductController, singleProductController, deleteProductController, updateProductController, createCategoryController,getAllCategoryController, allActiveProduct, allActiveAndDiscountProduct, deleteCategroyController } = require('../controllers/productController');
 const { uploadProductImg, updateProductImg } = require('../config/imageStorage');
 
 router.post('/createProduct', uploadProductImg.array('images', 5), createProductController);
@@ -16,5 +16,6 @@ router.post('/updateProduct/:id', updateProductImg.array('images', 5), updatePro
 
 router.post('/createCategory', createCategoryController);
 router.get('/allCategory', getAllCategoryController)
+router.delete('/deleteCategory/:id', deleteCategroyController);
 
 module.exports = router;

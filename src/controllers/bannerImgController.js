@@ -1,119 +1,168 @@
-// controllers/heroSliderController.js
-const path = require('path');
+let HeroSlider = require('../models/bannerImgModel');
 const fs = require('fs');
-const HeroSlider = require('../models/bannerImgModel');
+const path = require('path');
 
 const uploadDir = path.join(__dirname, '../upload');
 
+const MAX_IMAGES = 6;
+
 const deleteFileIfExists = (filename) => {
+    if (!filename) return;
+
     const filePath = path.join(uploadDir, filename);
+
     fs.unlink(filePath, (err) => {
         if (err && err.code !== 'ENOENT') {
-            console.error('File delete error:', err.message);
+            console.log('File delete error:', err.message);
         }
     });
 };
 
-// POST /api/heroSlider  (create + update, same endpoint)
+// =====================================================
+// Create + Update Hero Slider (same endpoint)
+// =====================================================
+
 exports.upsertHeroSliderController = async (req, res) => {
     try {
         let hero = await HeroSlider.findOne();
 
-        // body theke asa removeImages (JSON string ba array — frontend theke jeভাবে pathabe)
-        let removeImages = req.body.removeImages || [];
-        if (typeof removeImages === 'string') {
+        // Parse removeImages
+        // Frontend JSON.stringify() kore pathay, tai proyojon onujayi parse
+        let removeImages = req.body.removeImages;
+
+        if (removeImages) {
             try {
-                removeImages = JSON.parse(removeImages);
-            } catch {
-                removeImages = [removeImages];
+                removeImages = typeof removeImages === "string" ? JSON.parse(removeImages) : removeImages;
+
+                if (!Array.isArray(removeImages)) {
+                    removeImages = [removeImages];
+                }
+            } catch (error) {
+                // Fallback if comma separated string
+                removeImages = String(removeImages).split(",").map((item) =>
+                    item.trim()
+                ).filter(Boolean);
             }
+        } else {
+            removeImages = [];
         }
 
-        const newFilenames = (req.files || []).map((file) => file.filename);
+        // Images
+        const files = req.files || [];
+        const newFilenames = files.map((file) => file.filename);
+
+        // ---------------------------------
+        // Create
+        // ---------------------------------
 
         if (!hero) {
-            // ---- CREATE ----
+
             if (newFilenames.length === 0) {
                 return res.status(400).json({
                     success: false,
-                    message: 'At least one image is required.',
-                });
-            }
-            if (newFilenames.length > 6) {
-                newFilenames.forEach(deleteFileIfExists);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Maximum 6 images allowed.',
+                    message: "At least one image is required.",
                 });
             }
 
-            hero = await HeroSlider.create({ images: newFilenames });
+            if (newFilenames.length > MAX_IMAGES) {
+                newFilenames.forEach(deleteFileIfExists);
+
+                return res.status(400).json({
+                    success: false,
+                    message: `Maximum ${MAX_IMAGES} images allowed.`,
+                });
+            }
+
+            hero = new HeroSlider({
+                images: newFilenames,
+            });
+
+            await hero.save();
 
             return res.status(201).json({
                 success: true,
-                message: 'Hero slider created successfully.',
+                message: "Hero slider created successfully.",
                 data: hero,
             });
         }
 
-        // ---- UPDATE ----
-        let currentImages = hero.images.filter(
-            (img) => !removeImages.includes(img)
-        );
+        // ---------------------------------
+        // Update
+        // ---------------------------------
 
-        // remove-e mark kora image gulo disk theke delete
-        removeImages.forEach((img) => {
-            if (hero.images.includes(img)) deleteFileIfExists(img);
-        });
+        // Step 1: shudhu compute koro, kono file disk theke delete koro na ekhono
+        const currentImages = hero.images.filter((image) =>
+            !removeImages.includes(image)
+        );
 
         const finalImages = [...currentImages, ...newFilenames];
 
-        if (finalImages.length > 6) {
+        // Step 2: shob validation age sesh koro, file touch korar age
+        if (finalImages.length > MAX_IMAGES) {
             newFilenames.forEach(deleteFileIfExists);
+
             return res.status(400).json({
                 success: false,
-                message: `Maximum 6 images allowed. You currently have ${currentImages.length}, tried to add ${newFilenames.length}.`,
+                message: `Maximum ${MAX_IMAGES} images allowed. You currently have ${currentImages.length}, tried to add ${newFilenames.length}.`,
             });
         }
 
         if (finalImages.length === 0) {
             newFilenames.forEach(deleteFileIfExists);
+
             return res.status(400).json({
                 success: false,
-                message: 'At least one image must remain in the hero slider.',
+                message: "At least one image must remain in the hero slider.",
             });
         }
 
+        // Step 3: validation pass korle tokhon actual removeImages gulo disk theke delete koro
+        removeImages.forEach((image) => {
+            if (hero.images.includes(image)) {
+                deleteFileIfExists(image);
+            }
+        });
+
+        // Step 4: DB update
         hero.images = finalImages;
         await hero.save();
 
         return res.status(200).json({
             success: true,
-            message: 'Hero slider updated successfully.',
+            message: "Hero slider updated successfully.",
             data: hero,
         });
+
     } catch (error) {
-        console.error(error);
+        console.log("Hero slider save error:", error);
+
         return res.status(500).json({
             success: false,
-            message: 'Something went wrong.',
+            message: "Internal server error. Please try again later.",
             error: error.message,
         });
     }
 };
 
-// GET /api/heroSlider  (frontend-e cube slider load korar jonno)
+// =====================================================
+// Get Hero Slider
+// =====================================================
+
 exports.getHeroSliderController = async (req, res) => {
     try {
         const hero = await HeroSlider.findOne();
+
         return res.status(200).json({
             success: true,
             data: hero || { images: [] },
         });
+
     } catch (error) {
+        console.log("Get hero slider error:", error);
+
         return res.status(500).json({
             success: false,
-            message: 'Something went wrong.',
+            message: "Internal server error. Please try again later.",
             error: error.message,
         });
     }

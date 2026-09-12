@@ -8,44 +8,42 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// ---- Shared helper: safely delete a file from the upload folder ----
+function deleteFileIfExists(filename) {
+    if (!filename) return;
+    const filePath = path.join(uploadDir, filename);
+    fs.unlink(filePath, (err) => {
+        if (err && err.code !== 'ENOENT') {
+            console.error(`Failed to delete file ${filename}:`, err.message);
+        }
+    });
+}
 
-const storage = multer.diskStorage({
+// ---- Product create images ----
+const storageProduct = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, uniqueSuffix + '-' + file.originalname);
     }
 });
-exports.uploadProductImg = multer({ storage: storage });
+exports.uploadProductImg = multer({ storage: storageProduct });
 
-//===========================================
-
-
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
+// ---- Product update images ----
 const storageUpdateProduct = multer.diskStorage({
     destination(req, file, cb) {
         cb(null, uploadDir);
     },
     filename(req, file, cb) {
-        const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-
-        cb(null, uniqueSuffix + "-" + file.originalname);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
     },
 });
+exports.updateProductImg = multer({ storage: storageUpdateProduct });
 
-exports.updateProductImg = multer({
-    storage: storageUpdateProduct,
-});
-
-
-
-
+// ---- Hero slider images ----
 const storageHero = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir);
@@ -55,5 +53,7 @@ const storageHero = multer.diskStorage({
         cb(null, uniqueSuffix + '-' + file.originalname);
     }
 });
-
 exports.uploadHeroImg = multer({ storage: storageHero });
+
+exports.uploadDir = uploadDir;
+exports.deleteFileIfExists = deleteFileIfExists;

@@ -272,7 +272,7 @@ exports.createProductController = async (req, res) => {
       image3 -> isMain false
     */
 
-    const rawMainIndex = req.body.mainIndex;
+    const rawMainIndex = req.body.newMainIndex;
 
     const parsedMainIndex = Number(rawMainIndex);
 

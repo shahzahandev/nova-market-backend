@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const {Schema} = mongoose
+const { Schema } = mongoose
 
 let productSchema = new Schema({
     title: {
@@ -33,13 +33,13 @@ let productSchema = new Schema({
     },
     sku: {
         type: String,
-           required: true,
-           unique: true, 
+        required: true,
+        unique: true,
     },
     stock: {
         type: Number,
         min: 0,
-        required:  true
+        required: true
     },
     brand: {
         type: String
@@ -68,6 +68,12 @@ let productSchema = new Schema({
         {
             url: {
                 type: String,
+                required: true,
+            },
+
+            public_id: {
+                type: String,
+                required: true,
             },
             isMain: {
                 type: Boolean,
@@ -76,36 +82,36 @@ let productSchema = new Schema({
         }
     ],
     specifications: [
-      {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
+        {
+            name: {
+                type: String,
+                required: true,
+                trim: true,
+            },
 
-        value: {
-          type: String,
-          required: true,
-          trim: true,
+            value: {
+                type: String,
+                required: true,
+                trim: true,
+            },
         },
-      },
     ],
     features: [
-      {
-        type: String,
-        trim: true,
-      },
+        {
+            type: String,
+            trim: true,
+        },
     ],
     rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
     },
-     reviewCount: {
-      type: Number,
-      default: 0,
+    reviewCount: {
+        type: Number,
+        default: 0,
     },
-}, {timestamps: true})
+}, { timestamps: true })
 
 module.exports = mongoose.model('Product', productSchema)

@@ -91,7 +91,7 @@ let userModelSchema = new Schema({
         country: {
             type: String
         },
-    }
-})
+    },
+}, {timestamps: true})
 
 module.exports = mongoose.model("User", userModelSchema)

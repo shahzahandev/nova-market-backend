@@ -47,7 +47,6 @@ app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
 app.use('/api/v1/banner', bannerRoutes)
 
-// app.use("/upload", express.static(path.join(__dirname, "upload")));
 app.use('/upload', express.static(path.join(__dirname, 'src/upload')));
 
 // <==== PORT ====> 

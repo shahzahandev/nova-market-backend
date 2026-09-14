@@ -42,7 +42,7 @@ const {
 
 const {
   uploadProductImg
-} = require('../middleware/uploadMiddleware');
+} = require("../middleWare/uploadMiddleware");
 
 
 // ==================== PRODUCT ROUTES ====================

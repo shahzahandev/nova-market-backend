@@ -51,6 +51,7 @@ let productSchema = new Schema({
     subCategory: {
         type: String,
     },
+    
     tag: [
         {
             type: String,
@@ -63,6 +64,11 @@ let productSchema = new Schema({
         type: String,
         enum: ['pending', 'active', 'inactive'],
         default: 'active'
+    },
+    section: {
+        type: String,
+        enum: ['none','new', 'deals', 'feature'],
+        default: 'none'
     },
     images: [
         {

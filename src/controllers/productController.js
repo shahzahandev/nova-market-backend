@@ -2,14 +2,7 @@ const Product = require("../models/productModel");
 const Category = require("../models/categoryModels");
 const mongoose = require("mongoose");
 
-const {
-  uploadToCloudinary,
-  deleteFromCloudinary,
-} = require("../helpers/cloudinaryHelper");
-
-// ===========================================
-// CREATE PRODUCT
-// ===========================================
+const {uploadToCloudinary, deleteFromCloudinary,} = require("../helpers/cloudinaryHelper");
 
 exports.createProductController = async (req, res) => {
   let uploadedImages = [];
@@ -230,10 +223,6 @@ exports.createProductController = async (req, res) => {
       });
     }
 
-    // =====================================================
-    // Make Sure Arrays Are Actually Arrays
-    // =====================================================
-
     if (!Array.isArray(tags)) {
       tags = [];
     }
@@ -246,34 +235,7 @@ exports.createProductController = async (req, res) => {
       specifications = [];
     }
 
-    // =====================================================
-    // MAIN IMAGE INDEX
-    // =====================================================
-
-    /*
-      Frontend থেকে mainIndex আসবে:
-
-      mainIndex = 0
-      mainIndex = 1
-      mainIndex = 2
-      ...
-
-      Example:
-
-      images:
-      [image1, image2, image3]
-
-      mainIndex = 1
-
-      তাহলে:
-
-      image1 -> isMain false
-      image2 -> isMain true
-      image3 -> isMain false
-    */
-
     const rawMainIndex = req.body.newMainIndex;
-
     const parsedMainIndex = Number(rawMainIndex);
 
     const mainIndex =
@@ -282,20 +244,9 @@ exports.createProductController = async (req, res) => {
         ? parsedMainIndex
         : -1;
 
-    console.log("Raw mainIndex:", rawMainIndex);
-    console.log("Parsed mainIndex:", mainIndex);
-
-    // =====================================================
-    // Generate SKU
-    // =====================================================
-
     const sku = `SKU-${Date.now()}-${Math.floor(
       Math.random() * 10000
     )}`;
-
-    // =====================================================
-    // Upload Images To Cloudinary
-    // =====================================================
 
     if (
       Array.isArray(req.files) &&
@@ -324,72 +275,36 @@ exports.createProductController = async (req, res) => {
 
           const imageObject = {
             url: result.secure_url,
-
             public_id: result.public_id,
-
-            /*
-              VERY IMPORTANT
-
-              Only selected mainIndex will become true.
-            */
             isMain: index === mainIndex,
           };
 
           uploadedImages.push(imageObject);
 
-          console.log(
-            "Cloudinary uploaded:",
-            imageObject
-          );
         } catch (uploadError) {
           console.error(
             "Cloudinary upload failed:",
             uploadError
           );
 
-          /*
-            যেসব image আগে upload হয়েছে,
-            সেগুলো Cloudinary থেকে delete করে দেব।
-          */
-
           for (const image of uploadedImages) {
             try {
               if (image.public_id) {
-                await deleteFromCloudinary(
-                  image.public_id
-                );
-
-                console.log(
-                  "Cleanup successful:",
-                  image.public_id
-                );
+                await deleteFromCloudinary(image.public_id);
               }
             } catch (cleanupError) {
-              console.error(
-                "Cloudinary cleanup failed:",
-                cleanupError.message
-              );
+              console.error("Cloudinary cleanup failed:",cleanupError.message);
             }
           }
 
           return res.status(500).json({
             success: false,
-            message:
-              "Failed to upload product image.",
+            message:"Failed to upload product image.",
             error: uploadError.message,
           });
         }
       }
     }
-
-    // =====================================================
-    // Safety Main Image Logic
-    // =====================================================
-
-    /*
-      যদি image থাকে কিন্তু valid mainIndex না থাকে,
-      তাহলে প্রথম image automatically main হবে।
-    */
 
     if (uploadedImages.length > 0) {
       const hasMainImage = uploadedImages.some(
@@ -400,15 +315,6 @@ exports.createProductController = async (req, res) => {
         uploadedImages[0].isMain = true;
       }
     }
-
-    // =====================================================
-    // Final Main Image Check
-    // =====================================================
-
-    /*
-      এখানে নিশ্চিত করছি যে একসাথে
-      একটির বেশি image main না হয়।
-    */
 
     let mainImageFound = false;
 
@@ -433,116 +339,40 @@ exports.createProductController = async (req, res) => {
       }
     );
 
-    console.log(
-      "Final Uploaded Images:",
-      uploadedImages
-    );
-
-    // =====================================================
     // Create Product
-    // =====================================================
-
     const product = await Product.create({
-      // ---------------- BASIC ----------------
-
       title: title.trim(),
-
       description: description || "",
-
-      shortDescription:
-        shortDescription || "",
-
-      // ---------------- PRICE ----------------
-
+      shortDescription: shortDescription || "",
       price: parsedPrice,
-
-      discountType:
-        discountType || "none",
-
-      discountPrice:
-        Number(discountPrice) || 0,
-
-      discountStartDate:
-        discountStartDate
-          ? new Date(discountStartDate)
-          : undefined,
-
-      discountEndDate:
-        discountEndDate
-          ? new Date(discountEndDate)
-          : undefined,
-
-      // ---------------- SKU ----------------
-
+      discountType: discountType || "none",
+      discountPrice: Number(discountPrice) || 0,
+      discountStartDate: discountStartDate  ? new Date(discountStartDate) : undefined,
+      discountEndDate:discountEndDate ? new Date(discountEndDate) : undefined,
       sku,
-
-      // ---------------- STOCK ----------------
-
       stock: Number(stock) || 0,
-
-      // ---------------- PRODUCT INFO ----------------
-
       brand: brand || "",
-
       category: category.trim(),
-
-      subCategory:
-        subCategory || "",
-
+      subCategory: subCategory || "",
       tag: tags,
-
-      additionalInfo:
-        additionalInfo || "",
-
-      status:
-        status || "active",
-
-      // ---------------- IMAGES ----------------
-
+      additionalInfo: additionalInfo || "",
+      status: status || "active",
       images: uploadedImages,
-
-      // ---------------- SPECIFICATIONS ----------------
-
       specifications,
-
-      // ---------------- FEATURES ----------------
-
       features,
     });
 
-    // =====================================================
-    // Success Response
-    // =====================================================
-
-    console.log(
-      "Product created successfully:",
-      product._id
-    );
-
     return res.status(201).json({
       success: true,
-
-      message:
-        "Product created successfully.",
-
+      message:"Product created successfully.",
       product,
     });
+
   } catch (error) {
-    console.error(
-      "Create Product Error:",
-      error
+    console.error("Create Product Error:",error
     );
-
-    // =====================================================
-    // IMPORTANT:
-    // If MongoDB create fails,
-    // delete uploaded Cloudinary images.
-    // =====================================================
-
     if (uploadedImages.length > 0) {
-      console.log(
-        "Cleaning up uploaded Cloudinary images..."
-      );
+      console.log("Cleaning up uploaded Cloudinary images...");
 
       for (const image of uploadedImages) {
         try {
@@ -557,18 +387,11 @@ exports.createProductController = async (req, res) => {
             );
           }
         } catch (cleanupError) {
-          console.error(
-            "Failed to cleanup Cloudinary image:",
-            cleanupError.message
-          );
+          console.error("Failed to cleanup Cloudinary image:", cleanupError.message);
         }
       }
     }
-
-    // =====================================================
-    // Duplicate Error
-    // =====================================================
-
+    
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
@@ -580,10 +403,6 @@ exports.createProductController = async (req, res) => {
       });
     }
 
-    // =====================================================
-    // Validation Error
-    // =====================================================
-
     if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
@@ -594,10 +413,6 @@ exports.createProductController = async (req, res) => {
         error: error.message,
       });
     }
-
-    // =====================================================
-    // Server Error
-    // =====================================================
 
     return res.status(500).json({
       success: false,
@@ -611,43 +426,29 @@ exports.createProductController = async (req, res) => {
 };
 
 
-// ======================================================
-// UPDATE PRODUCT
-exports.updateProductController = async (
-  req,
-  res
-) => {
+
+exports.updateProductController = async (req, res) => {
   const newlyUploadedPublicIds = [];
 
   try {
     const { id } = req.params;
-
-    // ---------------------------------
-    // Validate ID
-    // ---------------------------------
 
     if (
       !mongoose.Types.ObjectId.isValid(id)
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid product ID",
+        message: "Invalid product ID",
       });
     }
 
-    // ---------------------------------
-    // Find Product
-    // ---------------------------------
 
-    const product =
-      await Product.findById(id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message:
-          "Product not found",
+        message:"Product not found",
       });
     }
 
@@ -655,109 +456,58 @@ exports.updateProductController = async (
     // BASIC FIELDS
     // =================================
 
-    if (
-      req.body.title !== undefined
-    ) {
-      product.title =
-        String(
-          req.body.title
-        ).trim();
+    if (req.body.title !== undefined) {
+      product.title = String(req.body.title).trim();
     }
 
-    if (
-      req.body.description !== undefined
-    ) {
-      product.description =
-        req.body.description;
+    if (req.body.description !== undefined) {
+      product.description = req.body.description;
     }
 
-    if (
-      req.body.shortDescription !==
-      undefined
-    ) {
-      product.shortDescription =
-        req.body.shortDescription;
+    if ( req.body.shortDescription !== undefined) {
+      product.shortDescription = req.body.shortDescription;
     }
 
-    if (
-      req.body.price !== undefined
-    ) {
-      const price =
-        Number(
-          req.body.price
-        );
-
-      if (
-        Number.isNaN(price) ||
-        price <= 0
-      ) {
+    if ( req.body.price !== undefined ) {
+      const price = Number(req.body.price);
+      if ( Number.isNaN(price) || price <= 0 ) {
         return res.status(400).json({
           success: false,
-          message:
-            "Price must be greater than 0.",
+          message: "Price must be greater than 0.",
         });
       }
-
       product.price = price;
     }
 
-    if (
-      req.body.stock !== undefined
-    ) {
-      const stock =
-        Number(
-          req.body.stock
-        );
-
-      if (
-        Number.isNaN(stock) ||
-        stock < 0
-      ) {
+    if ( req.body.stock !== undefined) {
+      const stock = Number( req.body.stock);
+      if ( Number.isNaN(stock) || stock < 0 ) {
         return res.status(400).json({
           success: false,
-          message:
-            "Stock cannot be negative.",
+          message:"Stock cannot be negative.",
         });
       }
-
       product.stock = stock;
     }
 
-    if (
-      req.body.brand !== undefined
-    ) {
-      product.brand =
-        req.body.brand;
+    if ( req.body.brand !== undefined ) {
+      product.brand = req.body.brand;
     }
 
-    if (
-      req.body.category !== undefined
-    ) {
-      product.category =
-        req.body.category;
+    if ( req.body.category !== undefined ) {
+      product.category = req.body.category;
     }
 
-    if (
-      req.body.subCategory !==
-      undefined
-    ) {
-      product.subCategory =
-        req.body.subCategory;
+    if ( req.body.subCategory !== undefined ) {
+      product.subCategory = req.body.subCategory;
     }
 
-    if (
-      req.body.additionalInfo !==
-      undefined
-    ) {
-      product.additionalInfo =
-        req.body.additionalInfo;
+    if (  req.body.additionalInfo !== undefined ) {
+      product.additionalInfo = req.body.additionalInfo;
     }
 
-    if (
-      req.body.status !== undefined
-    ) {
-      product.status =
-        req.body.status;
+    if ( req.body.status !== undefined ) {
+      product.status = req.body.status;
     }
 
     // =================================
@@ -1330,12 +1080,6 @@ exports.updateProductController = async (
   }
 };
 
-
-
-// ======================================================
-// DELETE PRODUCT
-// ======================================================
-
 exports.deleteProductController = async (
   req,
   res
@@ -1427,10 +1171,6 @@ exports.deleteProductController = async (
     });
   }
 };
-
-
-
-
 
 exports.allProductController = async (req, res) => {
   try {
@@ -1528,9 +1268,6 @@ exports.singleProductController = async (req, res) => {
     });
   }
 }
-
-
-
 
 // Category controller
 exports.createCategoryController = async (req, res) => {

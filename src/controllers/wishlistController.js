@@ -1,10 +1,8 @@
 const mongoose = require("mongoose");
 const Wishlist = require("../models/wishlistModel");
-
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// POST /api/wishlist
-// body: { userId, productId }
+
 exports.createWishlistController = async (req, res) => {
   try {
     const { userId, productId } = req.body;
@@ -43,7 +41,6 @@ exports.createWishlistController = async (req, res) => {
   }
 };
 
-// GET /api/wishlist
 exports.getAllWishlist = async (req, res) => {
   try {
     const wishlists = await Wishlist.find()
@@ -65,7 +62,6 @@ exports.getAllWishlist = async (req, res) => {
   }
 };
 
-// GET /api/wishlist/user/:userId
 exports.getSingleUserWishlist = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -95,7 +91,6 @@ exports.getSingleUserWishlist = async (req, res) => {
   }
 };
 
-// DELETE /api/wishlist/:id   (id = wishlist document _id)
 exports.deleteWishlist = async (req, res) => {
   try {
     const { id } = req.params;

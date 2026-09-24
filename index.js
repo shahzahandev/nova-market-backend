@@ -4,7 +4,6 @@ const cors = require('cors');
 const express = require('express');
 const app = express();
 const path = require('path');
-
 const dbConnection = require('./src/config/dbConnection');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
@@ -12,6 +11,10 @@ const productRoutes = require('./src/routes/productRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const bannerRoutes = require('./src/routes/bannerRoutes');
+const wishlistRoutes = require('./src/routes/wishlistRoutes');
+
+// <==== Database connetion =====>
+dbConnection();
 
 // <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
@@ -21,7 +24,6 @@ const allowedOrigins = [
   "https://nova-market-frontend.vercel.app",
   "https://nova-market-dashboard.vercel.app",
 ];
-
 
 app.use(
   cors({
@@ -36,16 +38,14 @@ app.use(
   })
 );
 
-// <==== Database connetion =====>
-dbConnection();
-
 // <==== Rotue =====>
 app.use('/api/v1/auth', authRoutes);   // checked
 app.use('/api/v1/user', userRoutes);   // checked
 app.use('/api/v1/product', productRoutes);  // checked
 app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
-app.use('/api/v1/banner', bannerRoutes)
+app.use('/api/v1/banner', bannerRoutes) // checked
+app.use('/api/v1/wishlist', wishlistRoutes) // no checked
 
 app.use('/upload', express.static(path.join(__dirname, 'src/upload')));
 

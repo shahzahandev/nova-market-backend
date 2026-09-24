@@ -9,13 +9,8 @@ exports.registrationController = async (req, res) => {
     const { name, email, password, confirmPassword, terms } = req.body
 
     try {
-        console.log("1. Register request received");
-
         // <=== Access user by Email ===>
         let existingUser = await User.findOne({ email: email })
-
-        console.log("2. User checked");
-
         // <=== If User already Avaiable ===>
         if (existingUser) {
             return res.status(409).json({
@@ -55,8 +50,6 @@ exports.registrationController = async (req, res) => {
             terms
         });
         await user.save();
-console.log("3. User created");
-
         // <=== Token Genarate ===>
         let token = tokenGenerator({
             id: user._id,
@@ -65,13 +58,8 @@ console.log("3. User created");
             process.env.JWT_SECRET_KEY,
             process.env.JWT_ACCESS_TOKEN_EXPIRY
         )
-        console.log("4. token");
-
-
         // <===  Mail Verification ===>
         await mailVerification(token, email)
-        console.log("5. Verification email sent");
-
 
         return res.status(201).json({
             success: true,
@@ -103,7 +91,6 @@ exports.loginController = async (req, res) => {
             })
         }
         // <=== if email & password are empty ===>
-        // emptyFillValidation(res, email, password)
         if (!email || !password) {
             return res.status(400).json({
                 success: false,

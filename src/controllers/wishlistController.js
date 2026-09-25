@@ -66,12 +66,12 @@ exports.getSingleUserWishlist = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // if (!isValidId(userId)) {
-    //   return res.status(400).json({ 
-    //         success: false, 
-    //         message: "Invalid userId" 
-    //     });
-    // }
+    if (!isValidId(userId)) {
+      return res.status(400).json({ 
+            success: false, 
+            message: "Invalid userId" 
+        });
+    }
 
     const wishlists = await Wishlist.find({ userId })
       .populate("productId")

@@ -847,33 +847,6 @@ exports.allProductController = async (req, res) => {
   }
 }
 
-exports.allActiveAndDiscountProduct = async (req, res) => {
-  try {
-    const currentDate = new Date();
-    const products = await Product.find({
-      $and: [
-        { status: "active" },
-        { discountStartDate: { $lte: currentDate } },
-        { discountEndDate: { $gte: currentDate } }
-      ]
-    }).sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      message: 'Fetching active and dicount products successfully',
-      products
-    });
-
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
-  }
-}
-
 exports.allActiveProduct = async (req, res) => {
   try {
     const products = await Product.find({ status: 'active' })
@@ -924,7 +897,68 @@ exports.singleProductController = async (req, res) => {
   }
 }
 
+exports.newProductController = async(req, res) => {
+  try {
+    const products = await Product.find({ section: 'new' })
+      .sort({ createdAt: -1 })
 
+    return res.status(200).json({
+      success: true,
+      message: 'Fetching all products successfully',
+      products
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+}
+
+exports.dealsProductController = async(req, res) => {
+  try {
+    const products = await Product.find({ section: 'deals' })
+      .sort({ createdAt: -1 })
+
+    return res.status(200).json({
+      success: true,
+      message: 'Fetching all products successfully',
+      products
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+}
+
+exports.featureProductController = async(req, res) => {
+  try {
+    const products = await Product.find({ section: 'feature' })
+      .sort({ createdAt: -1 })
+
+    return res.status(200).json({
+      success: true,
+      message: 'Fetching all products successfully',
+      products
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+}
 
 
 

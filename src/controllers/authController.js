@@ -82,6 +82,14 @@ exports.loginController = async (req, res) => {
     const { email, password } = req.body;
 
     try {
+            // <=== if email & password are empty ===>
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required.",
+            });
+        }
+
         let existingUser = await User.findOne({ email: email }).select("+password");
 
         if (!existingUser) {
@@ -89,13 +97,6 @@ exports.loginController = async (req, res) => {
                 success: false,
                 message: "No account found with this email address."
             })
-        }
-        // <=== if email & password are empty ===>
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Email and password are required.",
-            });
         }
 
         // <=== Password matching proccess ===>

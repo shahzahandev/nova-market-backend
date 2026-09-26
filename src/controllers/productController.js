@@ -962,9 +962,6 @@ exports.featureProductController = async(req, res) => {
 
 
 
-
-
-
 // Category controller
 exports.createCategoryController = async (req, res) => {
   const { name } = req.body

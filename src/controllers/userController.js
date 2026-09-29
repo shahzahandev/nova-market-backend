@@ -3,7 +3,7 @@ const User = require('../models/userModel')
 
 exports.getAllUsersController = async (req, res) => {
     try {
-        const userData = await User.find({}).limit(10).select('-password')
+        const userData = await User.find({}).select('-password')
 
         return res.status(200).json({
             success: true,

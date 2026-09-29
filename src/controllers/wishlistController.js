@@ -43,9 +43,7 @@ exports.createWishlistController = async (req, res) => {
 
 exports.getAllWishlist = async (req, res) => {
   try {
-    const wishlists = await Wishlist.find()
-      .populate("userId", "name email")
-      .populate("productId")
+    const wishlists = await Wishlist.find().populate('productId userId')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({

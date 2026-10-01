@@ -4,54 +4,68 @@ const Product = require('../models/productModel');
 
 exports.createCart = async (req, res) => {
     try {
-        const { proid, userid } = req.body
+        const { proid, userid } = req.body;
 
         const existingProduct = await Product.findOne({ _id: proid })
-
         if (!existingProduct) {
             return res.status(404).json({
                 success: false,
-                message: 'Product not found'
-            })
+                message: "Product not found",
+            });
         }
 
-        const existingProductOnCart = await Card.findOne({ product: proid, user: userid });
+        // Final price
+        const finalPrice =
+            Number(existingProduct.discountPrice) > 0
+                ? Number(existingProduct.discountPrice)
+                : Number(existingProduct.price);
 
+        // Check product already exists in cart
+        const existingProductOnCart = await Card.findOne({
+            product: proid,
+            user: userid,
+        });
+
+        // If already exists -> increase quantity
         if (existingProductOnCart) {
-            existingProductOnCart.quantity += 1
-            let finalPrice = existingProduct.discountPrice ? existingProduct.discountPrice : existingProduct.price;
-            existingProductOnCart.totalPrice = existingProductOnCart.quantity * finalPrice
+            existingProductOnCart.quantity += 1;
+
+            existingProductOnCart.totalPrice =
+                existingProductOnCart.quantity * finalPrice;
+
             await existingProductOnCart.save();
 
             return res.status(200).json({
                 success: true,
-                message: 'Product quantity updated successfully',
-                data: existingProductOnCart
+                message: "Product quantity updated successfully",
+                data: existingProductOnCart,
             });
         }
 
-        let card = new Card({
+        // New cart item
+        const card = new Card({
             product: proid,
             user: userid,
             quantity: 1,
             totalPrice: finalPrice,
-        })
+        });
+
         await card.save();
 
         return res.status(200).json({
             success: true,
-            message: 'Product added successfully',
-            data: card
-        })
+            message: "Product added successfully",
+            data: card,
+        });
+
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Server error',
-            error: error.message
-        })
+            message: "Server error",
+            error: error.message,
+        });
     }
-
-}
+};
 
 exports.increDecre = async (req, res) => {
     try {

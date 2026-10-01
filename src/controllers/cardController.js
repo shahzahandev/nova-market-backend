@@ -147,18 +147,18 @@ exports.cartdelete = async (req, res) => {
 exports.getSingleCard = async (req, res) => {
     try {
         const { userId } = req.params
+        const cart = await Card.find({ user: userId }).populate("user product"); 
 
-        const card = await Card.find({ user: userId }).populate("user product"); 
-
-        let totalPrice = 0;
-        card.map(item => {
-            totalPrice += item.totalPrice
+        let totalCartPrice = 0;
+        cart.map(item => {
+            totalCartPrice += item.totalPrice
         })
 
         return res.status(200).json({
             success: true,
-            card,
-            totalPrice
+            message: 'Users cart and cart total price',
+            cart,
+            totalCartPrice
         })
 
     } catch (error) {

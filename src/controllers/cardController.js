@@ -16,7 +16,7 @@ exports.createCart = async (req, res) => {
 
         // Final price
         const finalPrice =
-            Number(existingProduct.discountPrice) > 0
+            Number(existingProduct.discountPrice)
                 ? Number(existingProduct.discountPrice)
                 : Number(existingProduct.price);
 
@@ -67,55 +67,119 @@ exports.createCart = async (req, res) => {
     }
 };
 
+// exports.increDecre = async (req, res) => {
+//     try {
+//         const { id } = req.params // this id will be card id
+//         const { type, userid } = req.body
+
+//         const cart = await Card.findOne({ _id: id, user: userid });
+
+//         if (!cart) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Cart item not found"
+//             });
+//         }
+//         const product = await Product.findById(cart.product)
+
+//         if (type === 'plus') {
+//             cart.quantity += 1;
+//         } else if (type === 'minus') {
+//             if (cart.quantity <= 1) {
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: 'Quantity cannot be less than 1'
+//                 });
+//             }
+//             cart.quantity -= 1;
+//         } else {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid type. Use plus or minus'
+//             });
+//         }
+
+//         cart.totalPrice = cart.quantity * product.price;
+//         await cart.save();
+
+//         return res.status(200).json({
+//             success: true,
+//             message: 'Product updated successfully',
+//             data: cart
+//         })
+
+//     } catch (error) {
+//         return res.status(500).json({
+//             success: false,
+//             message: 'Server Error',
+//             error: error.message
+//         })
+//     }
+// }
+
+
 exports.increDecre = async (req, res) => {
     try {
-        const { id } = req.params // this id will be card id
-        const { type, userid } = req.body
+        const { id } = req.params; // cart id
+        const { type, userid } = req.body;
 
         const cart = await Card.findOne({ _id: id, user: userid });
 
         if (!cart) {
             return res.status(404).json({
                 success: false,
-                message: "Cart item not found"
+                message: "Cart item not found",
             });
         }
-        const product = await Product.findById(cart.product)
 
-        if (type === 'plus') {
+        const product = await Product.findById(cart.product);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        // Final price
+        const finalPrice =
+            Number(product.discountPrice) 
+                ? Number(product.discountPrice)
+                : Number(product.price);
+
+        if (type === "plus") {
             cart.quantity += 1;
-        } else if (type === 'minus') {
+        } else if (type === "minus") {
             if (cart.quantity <= 1) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Quantity cannot be less than 1'
+                    message: "Quantity cannot be less than 1",
                 });
             }
             cart.quantity -= 1;
         } else {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid type. Use plus or minus'
+                message: "Invalid type. Use plus or minus",
             });
         }
 
-        cart.totalPrice = cart.quantity * product.price;
+        cart.totalPrice = cart.quantity * finalPrice;
         await cart.save();
 
         return res.status(200).json({
             success: true,
-            message: 'Product updated successfully',
-            data: cart
-        })
-
+            message: "Product updated successfully",
+            data: cart,
+        });
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Server Error',
-            error: error.message
-        })
+            message: "Server Error",
+            error: error.message,
+        });
     }
-}
+};
 
 exports.cartdelete = async (req, res) => {
     try {

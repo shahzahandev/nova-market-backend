@@ -67,57 +67,6 @@ exports.createCart = async (req, res) => {
     }
 };
 
-// exports.increDecre = async (req, res) => {
-//     try {
-//         const { id } = req.params // this id will be card id
-//         const { type, userid } = req.body
-
-//         const cart = await Card.findOne({ _id: id, user: userid });
-
-//         if (!cart) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Cart item not found"
-//             });
-//         }
-//         const product = await Product.findById(cart.product)
-
-//         if (type === 'plus') {
-//             cart.quantity += 1;
-//         } else if (type === 'minus') {
-//             if (cart.quantity <= 1) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Quantity cannot be less than 1'
-//                 });
-//             }
-//             cart.quantity -= 1;
-//         } else {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Invalid type. Use plus or minus'
-//             });
-//         }
-
-//         cart.totalPrice = cart.quantity * product.price;
-//         await cart.save();
-
-//         return res.status(200).json({
-//             success: true,
-//             message: 'Product updated successfully',
-//             data: cart
-//         })
-
-//     } catch (error) {
-//         return res.status(500).json({
-//             success: false,
-//             message: 'Server Error',
-//             error: error.message
-//         })
-//     }
-// }
-
-
 exports.increDecre = async (req, res) => {
     try {
         const { id } = req.params; // cart id
@@ -143,11 +92,18 @@ exports.increDecre = async (req, res) => {
 
         // Final price
         const finalPrice =
-            Number(product.discountPrice) 
+            Number(product.discountPrice)
                 ? Number(product.discountPrice)
                 : Number(product.price);
 
         if (type === "plus") {
+            // Stock er beshi kokhonoi hobe na
+            if (cart.quantity + 1 > Number(product.stock)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Only ${Number(product.stock)} item(s) available in stock`,
+                });
+            }
             cart.quantity += 1;
         } else if (type === "minus") {
             if (cart.quantity <= 1) {

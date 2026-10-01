@@ -6,7 +6,7 @@ exports.createCart = async (req, res) => {
     try {
         const { proid, userid } = req.body;
 
-        const existingProduct = await Product.findOne({ _id: proid })
+        const existingProduct = await Product.findOne({ _id: proid });
         if (!existingProduct) {
             return res.status(404).json({
                 success: false,
@@ -14,22 +14,36 @@ exports.createCart = async (req, res) => {
             });
         }
 
+        const stock = Number(existingProduct.stock);
+
+        if (stock < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Product is out of stock",
+            });
+        }
+
         // Final price
         const finalPrice =
-            Number(existingProduct.discountPrice)
+            Number(existingProduct.discountPrice) > 0
                 ? Number(existingProduct.discountPrice)
                 : Number(existingProduct.price);
 
-        // Check product already exists in cart
         const existingProductOnCart = await Card.findOne({
             product: proid,
             user: userid,
         });
 
-        // If already exists -> increase quantity
         if (existingProductOnCart) {
-            existingProductOnCart.quantity += 1;
+            // Stock er beshi kokhonoi hobe na
+            if (existingProductOnCart.quantity + 1 > stock) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Only ${stock} item(s) available in stock`,
+                });
+            }
 
+            existingProductOnCart.quantity += 1;
             existingProductOnCart.totalPrice =
                 existingProductOnCart.quantity * finalPrice;
 
@@ -42,7 +56,6 @@ exports.createCart = async (req, res) => {
             });
         }
 
-        // New cart item
         const card = new Card({
             product: proid,
             user: userid,
@@ -57,7 +70,6 @@ exports.createCart = async (req, res) => {
             message: "Product added successfully",
             data: card,
         });
-
     } catch (error) {
         return res.status(500).json({
             success: false,

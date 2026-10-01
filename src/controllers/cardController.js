@@ -19,7 +19,7 @@ exports.createCart = async (req, res) => {
 
         if (existingProductOnCart) {
             existingProductOnCart.quantity += 1
-            const finalPrice = existingProduct.discountPrice ? existingProduct.discountPrice : existingProduct.price;
+            let finalPrice = existingProduct.discountPrice ? existingProduct.discountPrice : existingProduct.price;
             existingProductOnCart.totalPrice = existingProductOnCart.quantity * finalPrice
             await existingProductOnCart.save();
 

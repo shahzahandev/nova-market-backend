@@ -4,7 +4,7 @@ const { paymentController, allOrder, codController, getSingleUserOrders } = requ
 
 
 router.post("/payment", paymentController); // tested
-router.get("/getOrder/:id", getSingleUserOrders);  // tested
+router.get("/getSingleUserOrders/:userId", getSingleUserOrders);  // tested
 router.get('/allOrder', allOrder);
 router.post("/cod", codController);
 

@@ -25,7 +25,7 @@ const orderSchem = new Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'reject', 'approved'],
+        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
         default: 'pending'
     },
     tranId: {

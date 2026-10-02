@@ -187,11 +187,35 @@ const buildCheckout = async ({ userId, deliveryArea }) => {
   return { productInfo, ...delivery };
 };
 
+// const makeTranId = (name) => {
+//   const ts = Date.now().toString();
+//   const rand = Math.floor(Math.random() * 900 + 100); // 3 digit
+//   return `${name.replace(/\s/g, "").slice(0, 2)}${ts.slice(-5)}Eco${rand}`;
+// };
 const makeTranId = (name) => {
   const ts = Date.now().toString();
-  const rand = Math.floor(Math.random() * 900 + 100); // 3 digit
-  return `${name.replace(/\s/g, "").slice(0, 2)}${ts.slice(-5)}Eco${rand}`;
+  const rand = Math.floor(Math.random() * 900 + 100);
+
+  // Name থেকে শুধু English letter বের করা
+  const englishName = (name || "").match(/[A-Za-z]/g);
+
+  let prefix;
+
+  if (englishName && englishName.length >= 2) {
+    // English name হলে প্রথম 2 letter
+    prefix = englishName.slice(0, 2).join("").toUpperCase();
+  } else {
+    // বাংলা বা English letter না থাকলে random 2 English letter
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    prefix =
+      letters[Math.floor(Math.random() * 26)] +
+      letters[Math.floor(Math.random() * 26)];
+  }
+
+  return `${prefix}${ts.slice(-5)}Eco${rand}`;
 };
+
 
 const buildShipping = (b) => ({
   name: b.cus_name,
@@ -278,6 +302,80 @@ exports.paymentController = async (req, res) => {
   }
 };
 
+// SUCCESS
+exports.paymentSuccess = async (req, res) => {
+  const tranId = getTranId(req);
+
+  try {
+    const order = await Order.findOne({ tranId });
+
+    if (!order) {
+      return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
+    }
+
+    const result = await verifyAamarpayPayment(tranId);
+
+    const isPaid =
+      result.pay_status === "Successful" &&
+      result.mer_txnid === tranId &&
+      Number(result.amount) === Number(order.totalPrice);
+
+    if (!isPaid) {
+      order.paymentStatus = "failed";
+      order.status = "cancelled";
+      await order.save();
+      return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
+    }
+
+    // Duplicate callback hole abar update korbe na
+    if (order.paymentStatus !== "paid") {
+      order.paymentStatus = "paid";
+      await order.save();
+    }
+
+    return res.redirect(303, `${FRONTEND_URL}/payment/success?tranId=${tranId}`);
+  } catch (error) {
+    console.error("Payment success error:", error.response?.data || error.message);
+    return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
+  }
+};
+
+// FAIL
+exports.paymentFail = async (req, res) => {
+  const tranId = getTranId(req);
+
+  try {
+    if (tranId) {
+      await Order.findOneAndUpdate(
+        { tranId, paymentStatus: { $ne: "paid" } },
+        { paymentStatus: "failed", status: "cancelled" }
+      );
+    }
+  } catch (error) {
+    console.error("Payment fail error:", error);
+  }
+
+  return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
+};
+
+// CANCEL
+exports.paymentCancel = async (req, res) => {
+  const tranId = getTranId(req);
+
+  try {
+    if (tranId) {
+      await Order.findOneAndUpdate(
+        { tranId, paymentStatus: { $ne: "paid" } },
+        { paymentStatus: "cancelled", status: "cancelled" }
+      );
+    }
+  } catch (error) {
+    console.error("Payment cancel error:", error);
+  }
+
+  return res.redirect(303, `${FRONTEND_URL}/payment/cancel?tranId=${tranId}`);
+};
+
 // ---------------- CASH ON DELIVERY ----------------
 exports.codController = async (req, res) => {
   const { userId, deliveryArea, cus_name } = req.body;
@@ -324,6 +422,8 @@ exports.codController = async (req, res) => {
   }
 };
 
+
+
 exports.getSingleUserOrders = async (req, res) => {
   const { userId } = req.params;
 
@@ -368,9 +468,6 @@ exports.getSingleUserOrders = async (req, res) => {
   }
 };
 
-
-
-
 exports.allOrder = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -400,8 +497,6 @@ exports.allOrder = async (req, res) => {
     });
   }
 };
-
-
 
 exports.updateOrderStatus = async (req, res) => {
   try {

@@ -324,41 +324,6 @@ exports.codController = async (req, res) => {
   }
 };
 
-
-// exports.singletOrder = async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-//     if (!mongoose.isValidObjectId(id)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid order id",
-//       });
-//     }
-    
-//     const order = await Order.findById(id); // object return kore, array na
-
-//     if (!order) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Order not found",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Order",
-//       order,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server Error",
-//       error: error.message,
-//     });
-//   }
-// };
-
 exports.getSingleUserOrders = async (req, res) => {
   const { userId } = req.params;
 
@@ -372,7 +337,7 @@ exports.getSingleUserOrders = async (req, res) => {
     }
 
     // Find all orders of this user
-    const orders = await Order.find({ user: userId }).populate(user)
+    const orders = await Order.find({ user: userId }).populate('user')
       .sort({ createdAt: -1 });
 
     // No orders found

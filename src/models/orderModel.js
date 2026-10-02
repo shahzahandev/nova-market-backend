@@ -1,23 +1,23 @@
 const mongoose = require('mongoose');
-const {Schema} = mongoose;
+const { Schema } = mongoose;
 
 const orderSchem = new Schema({
-    user:{
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
     products: [{
-              title: String,
-              price: Number,
-              discountPrice: Number,
-              sku: String,
-              stock: String,
-              category: String,
-              tag: Array,
-              status: String,
-              quantity: Number,
-              totalPrice: Number
+        title: String,
+        price: Number,
+        discountPrice: Number,
+        sku: String,
+        stock: String,
+        category: String,
+        tag: Array,
+        status: String,
+        quantity: Number,
+        totalPrice: Number
     }],
     totalPrice: {
         type: Number,
@@ -32,8 +32,23 @@ const orderSchem = new Schema({
         type: String,
         required: true,
         unique: true
-    }
-}, {timestamps: true})
+    },
+
+
+    //=================
+    subTotal: { type: Number, default: 0 },
+    deliveryCharge: { type: Number, default: 0 },
+    deliveryArea: { type: String },            // "inside" | "outside"
+    paymentMethod: { type: String },           // "cod" | "online"
+    shipping: {                                // ager order e customer er address save hoy nai
+        name: String,
+        phone: String,
+        email: String,
+        address: String,
+        city: String,
+        postcode: String,
+    },
+}, { timestamps: true })
 
 
 

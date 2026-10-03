@@ -118,7 +118,7 @@ exports.paymentController = async (req, res) => {
     const tranId = makeTranId(cus_name);
 
     const payload = {
-      store_id: AAMARPAY_STORE_ID,
+      store_id: process.env.AAMARPAY_STORE_ID,
       tran_id: tranId,
       success_url: process.env.PAYMENT_SUCCESS_URL || "http://localhost:5174" || "http://localhost:5173",
       fail_url: process.env.PAYMENT_FAIL_URL  || "http://localhost:5174" || "http://localhost:5173",

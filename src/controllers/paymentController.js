@@ -266,8 +266,6 @@ exports.codController = async (req, res) => {
   }
 };
 
-
-
 exports.getSingleUserOrders = async (req, res) => {
   const { userId } = req.params;
 

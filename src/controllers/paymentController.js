@@ -15,7 +15,7 @@ const getTranId = (req) =>
 const verifyAamarpayPayment = async (tranId) => {
   const response = await axios.get(
     process.env.AAMARPAY_VERIFY_URL ||
-      "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php",
+    "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php",
     {
       params: {
         request_id: tranId,
@@ -116,13 +116,14 @@ exports.paymentController = async (req, res) => {
       await buildCheckout({ userId, deliveryArea });
 
     const tranId = makeTranId(cus_name);
+    const withTranId = (url) => `${url}${url.includes("?") ? "&" : "?"}tranId=${tranId}`
 
     const payload = {
       store_id: process.env.AAMARPAY_STORE_ID,
       tran_id: tranId,
-      success_url: process.env.PAYMENT_SUCCESS_URL || "http://localhost:5174" || "http://localhost:5173",
-      fail_url: process.env.PAYMENT_FAIL_URL  || "http://localhost:5174" || "http://localhost:5173",
-      cancel_url: process.env.PAYMENT_CANCEL_URL  || "http://localhost:5174" || "http://localhost:5173",
+      success_url: withTranId(process.env.PAYMENT_SUCCESS_URL),
+      fail_url: withTranId(process.env.PAYMENT_FAIL_URL),
+      cancel_url: withTranId(process.env.PAYMENT_CANCEL_URL),
       currency: "BDT",
       signature_key: process.env.AAMARPAY_SIGNATURE_KEY,
       desc: "Nova Market Order",
@@ -207,6 +208,7 @@ exports.paymentSuccess = async (req, res) => {
     // Duplicate callback hole abar update korbe na
     if (order.paymentStatus !== "paid") {
       order.paymentStatus = "paid";
+      await Cart.deleteMany({ user: order.user });
       await order.save();
     }
 

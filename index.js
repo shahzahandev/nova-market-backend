@@ -40,6 +40,13 @@ app.use(
   })
 );
 
+
+app.use((req, res, next) => {
+  // Aamarpay er callback er Origin allowedOrigins e nei, tai ekhane CORS check hobe na
+  if (req.path.startsWith("/api/v1/order/payment/")) return next();
+  return corsMiddleware(req, res, next);
+});
+
 app.use(express.urlencoded({ extended: true }));
 
 // <==== Rotue =====>

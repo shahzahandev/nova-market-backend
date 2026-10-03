@@ -340,6 +340,7 @@ exports.allOrder = async (req, res) => {
   }
 };
 
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -379,8 +380,18 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Only status will be updated
+    const previousStatus = order.status;
+
+    // Status update
     order.status = status;
+
+    // Notun kore delivered hole date save hobe,
+    // delivered theke onno status e gele deliveredAt muchhe jabe
+    if (status === "delivered" && previousStatus !== "delivered") {
+      order.deliveredAt = new Date();
+    } else if (status !== "delivered") {
+      order.deliveredAt = null;
+    }
 
     await order.save();
 

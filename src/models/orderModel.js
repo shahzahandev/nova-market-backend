@@ -38,9 +38,9 @@ const orderSchem = new Schema({
     //=================
     subTotal: { type: Number, default: 0 },
     deliveryCharge: { type: Number, default: 0 },
-    deliveryArea: { type: String },            // "inside" | "outside"
-    paymentMethod: { type: String },           // "cod" | "online"
-    shipping: {                                // ager order e customer er address save hoy nai
+    deliveryArea: { type: String },  
+    paymentMethod: { type: String },           
+    shipping: {        
         name: String,
         phone: String,
         email: String,
@@ -48,6 +48,11 @@ const orderSchem = new Schema({
         city: String,
         postcode: String,
     },
+    deliveredAt: { 
+        type: Date, 
+        default: null 
+    },
+    
 }, { timestamps: true })
 
 

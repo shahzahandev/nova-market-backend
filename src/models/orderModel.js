@@ -8,6 +8,7 @@ const orderSchem = new Schema({
         required: true
     },
     products: [{
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
         title: String,
         price: Number,
         discountPrice: Number,
@@ -33,14 +34,16 @@ const orderSchem = new Schema({
         required: true,
         unique: true
     },
+    stockDeducted: { type: Boolean, default: false },
+    paymentStatus: { type: String, enum: ["pending", "paid", "failed", "cancelled"] }, // default dibe na
 
 
     //=================
     subTotal: { type: Number, default: 0 },
     deliveryCharge: { type: Number, default: 0 },
-    deliveryArea: { type: String },  
-    paymentMethod: { type: String },           
-    shipping: {        
+    deliveryArea: { type: String },
+    paymentMethod: { type: String },
+    shipping: {
         name: String,
         phone: String,
         email: String,
@@ -48,11 +51,11 @@ const orderSchem = new Schema({
         city: String,
         postcode: String,
     },
-    deliveredAt: { 
-        type: Date, 
-        default: null 
+    deliveredAt: {
+        type: Date,
+        default: null
     },
-    
+
 }, { timestamps: true })
 
 

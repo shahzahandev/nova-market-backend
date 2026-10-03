@@ -40,6 +40,8 @@ app.use(
   })
 );
 
+app.use(express.urlencoded({ extended: true }));
+
 // <==== Rotue =====>
 app.use('/api/v1/auth', authRoutes);   // checked
 app.use('/api/v1/user', userRoutes);   // checked

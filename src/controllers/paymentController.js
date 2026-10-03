@@ -1,8 +1,38 @@
 const axios = require("axios");
 const Cart = require("../models/cardModel");
 const Order = require("../models/orderModel");
+const Product = require("../models/productModel");
 const { calculateDelivery, httpError } = require("../utils/deliveryCharge");
 const mongoose = require("mongoose");
+
+
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+const getTranId = (req) =>
+  req.body?.mer_txnid || req.body?.tran_id || req.query?.tranId || "";
+
+// Aamarpay er server theke payment ashole hoyeche kina verify kora
+const verifyAamarpayPayment = async (tranId) => {
+  const response = await axios.get(
+    process.env.AAMARPAY_VERIFY_URL ||
+      "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php",
+    {
+      params: {
+        request_id: tranId,
+        store_id: process.env.AAMARPAY_STORE_ID || "aamarpaytest",
+        signature_key:
+          process.env.AAMARPAY_SIGNATURE_KEY || "dbb74894e82415a2f7ff0ec3a97e4183",
+        type: "json",
+      },
+    }
+  );
+
+  return response.data; // pay_status, mer_txnid, amount ityadi
+};
+
+
+
+
 
 
 // Cart theke product list + subtotal + delivery charge (server side)
@@ -17,7 +47,9 @@ const buildCheckout = async ({ userId, deliveryArea }) => {
   let subTotal = 0;
   const productInfo = items.map((item) => {
     subTotal += item.totalPrice;
+
     return {
+      productId: item.product._id,
       title: item.product.title,
       price: item.product.price,
       discountPrice: item.product.discountPrice,
@@ -86,13 +118,13 @@ exports.paymentController = async (req, res) => {
     const tranId = makeTranId(cus_name);
 
     const payload = {
-      store_id: "aamarpaytest",
+      store_id: AAMARPAY_STORE_ID,
       tran_id: tranId,
       success_url: process.env.PAYMENT_SUCCESS_URL || "http://localhost:5174" || "http://localhost:5173",
       fail_url: process.env.PAYMENT_FAIL_URL  || "http://localhost:5174" || "http://localhost:5173",
       cancel_url: process.env.PAYMENT_CANCEL_URL  || "http://localhost:5174" || "http://localhost:5173",
       currency: "BDT",
-      signature_key: "dbb74894e82415a2f7ff0ec3a97e4183",
+      signature_key: process.env.AAMARPAY_SIGNATURE_KEY,
       desc: "Nova Market Order",
       amount: grandTotal, // cart total + delivery charge
       cus_name,
@@ -122,6 +154,7 @@ exports.paymentController = async (req, res) => {
       deliveryArea,
       totalPrice: grandTotal,
       paymentMethod: "online",
+      paymentStatus: "pending",
       shipping: buildShipping(req.body),
       tranId,
     });
@@ -341,6 +374,76 @@ exports.allOrder = async (req, res) => {
 };
 
 
+
+// ---------------------------------------------------------------
+// Stock helpers
+// ---------------------------------------------------------------
+
+// pending ar cancelled chhara baki status e order er stock "dhore rakha" thake
+const holdsStock = (status) => status !== "pending" && status !== "cancelled";
+
+// Order er item theke product khuje ber korar filter.
+// Notun order e productId thakbe, purano order e nei, tai sku fallback
+const getStockFilter = (item) => (item.productId ? { _id: item.productId } : { sku: item.sku });
+
+// Ekoi product order e duibar thakle quantity jog kore ekta entry banay
+const groupItems = (order) => {
+  const map = new Map();
+
+  for (const item of order.products || []) {
+    const quantity = Number(item.quantity) || 0;
+    const key = item.productId ? String(item.productId) : `sku:${item.sku}`;
+
+    if (!map.has(key)) {
+      map.set(key, { filter: getStockFilter(item), title: item.title, quantity: 0 });
+    }
+    map.get(key).quantity += quantity;
+  }
+
+  return [...map.values()].filter((item) => item.quantity > 0);
+};
+
+// Stock ferot dewa (product delete hoye gele skip hobe)
+const restoreItems = async (items) => {
+  for (const item of items) {
+    await Product.updateOne(item.filter, { $inc: { stock: item.quantity } });
+  }
+};
+
+// Stock komano. Protita product e "stock >= quantity" condition thake,
+// tai ekshathe duita order hole-o stock negative hobe na.
+// Kono ekta product fail korle ager komano gulo ferot diye dey (all-or-nothing)
+const deductStock = async (order) => {
+  const done = [];
+
+  for (const item of groupItems(order)) {
+    const result = await Product.updateOne(
+      { ...item.filter, stock: { $gte: item.quantity } },
+      { $inc: { stock: -item.quantity } }
+    );
+
+    if (result.modifiedCount === 0) {
+      await restoreItems(done);
+
+      const product = await Product.findOne(item.filter).select("stock");
+      return {
+        ok: false,
+        message: product
+          ? `Not enough stock for "${item.title}". Available: ${product.stock}, required: ${item.quantity}`
+          : `Product "${item.title}" no longer exists`,
+      };
+    }
+
+    done.push(item);
+  }
+
+  return { ok: true, done };
+};
+
+// ---------------------------------------------------------------
+// Controller
+// ---------------------------------------------------------------
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -382,7 +485,37 @@ exports.updateOrderStatus = async (req, res) => {
 
     const previousStatus = order.status;
 
-    // Status update
+    // ---------- Stock logic ----------
+    let deductedItems = []; // save fail korle ferot dewar jonno
+    let restoredItems = [];
+
+    if (holdsStock(status) && !order.stockDeducted) {
+      // Online order er payment confirm na hole stock komabe na
+      if (order.paymentMethod === "online" && order.paymentStatus === "pending") {
+        return res.status(400).json({
+          success: false,
+          message: "Payment is not confirmed yet for this online order",
+        });
+      }
+
+      const result = await deductStock(order);
+
+      if (!result.ok) {
+        return res.status(400).json({
+          success: false,
+          message: result.message,
+        });
+      }
+
+      deductedItems = result.done;
+      order.stockDeducted = true;
+    } else if (!holdsStock(status) && order.stockDeducted) {
+      restoredItems = groupItems(order);
+      await restoreItems(restoredItems);
+      order.stockDeducted = false;
+    }
+
+    // ---------- Status update ----------
     order.status = status;
 
     // Notun kore delivered hole date save hobe,
@@ -393,7 +526,17 @@ exports.updateOrderStatus = async (req, res) => {
       order.deliveredAt = null;
     }
 
-    await order.save();
+    try {
+      await order.save();
+    } catch (saveError) {
+      // Order save na hole stock change ta undo kore dao
+      if (deductedItems.length) {
+        await restoreItems(deductedItems);
+      } else if (restoredItems.length) {
+        await deductStock({ products: order.products });
+      }
+      throw saveError;
+    }
 
     return res.status(200).json({
       success: true,

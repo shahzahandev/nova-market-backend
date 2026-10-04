@@ -14,6 +14,7 @@ const bannerRoutes = require('./src/routes/bannerRoutes');
 const wishlistRoutes = require('./src/routes/wishlistRoutes');
 const deliveryRoutes = require('./src/routes/deliveryRoutes');
 const whatsappRoutes = require('./src/routes/whatsappRoutes');
+const noticeRoute = require('./src/routes/noticeRoute');
 
 // <==== Database connetion =====>
 dbConnection();
@@ -54,8 +55,10 @@ app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
 app.use('/api/v1/banner', bannerRoutes) // checked
 app.use('/api/v1/wishlist', wishlistRoutes) // checked
-app.use("/api/v1/delivery", deliveryRoutes);
-app.use("/api/v1/whatsapp", whatsappRoutes);
+app.use("/api/v1/delivery", deliveryRoutes); // checked
+app.use("/api/v1/whatsapp", whatsappRoutes); // checked
+app.use("/api/v1/notice", noticeRoute); // checked
+
 
 app.use('/upload', express.static(path.join(__dirname, 'src/upload')));
 

@@ -19,7 +19,9 @@ const whatsappRoutes = require('./src/routes/whatsappRoutes');
 dbConnection();
 
 // <==== middleware ====>
+// <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -27,19 +29,16 @@ const allowedOrigins = [
   "https://nova-market-dashboard.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
-
+const corsMiddleware = cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+});
 
 app.use((req, res, next) => {
   // Aamarpay er callback er Origin allowedOrigins e nei, tai ekhane CORS check hobe na
@@ -48,7 +47,6 @@ app.use((req, res, next) => {
 });
 
 app.use(express.urlencoded({ extended: true }));
-
 // <==== Rotue =====>
 app.use('/api/v1/auth', authRoutes);   // checked
 app.use('/api/v1/user', userRoutes);   // checked

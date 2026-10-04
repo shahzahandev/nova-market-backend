@@ -19,7 +19,6 @@ const whatsappRoutes = require('./src/routes/whatsappRoutes');
 dbConnection();
 
 // <==== middleware ====>
-// <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
 
 const allowedOrigins = [

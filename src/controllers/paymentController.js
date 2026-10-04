@@ -26,8 +26,18 @@ const verifyAamarpayPayment = async (tranId) => {
       },
     }
   );
+  let data = response.data;
 
-  return response.data; // pay_status, mer_txnid, amount ityadi
+  // Kokhono string hishebe ashe, tai parse kore nao
+  if (typeof data === "string") {
+    try {
+      data = JSON.parse(data);
+    } catch (err) {
+      console.error("Aamarpay verify response parse failed:", data);
+    }
+  }
+
+  return data;
 };
 
 
@@ -192,6 +202,8 @@ exports.paymentSuccess = async (req, res) => {
     }
 
     const result = await verifyAamarpayPayment(tranId);
+    console.log("Aamarpay verify result:", result);
+    console.log("Order totalPrice:", order.totalPrice, "tranId:", tranId);
 
     const isPaid =
       result.pay_status === "Successful" &&

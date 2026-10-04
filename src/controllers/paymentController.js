@@ -15,7 +15,7 @@ const getTranId = (req) =>
 const verifyAamarpayPayment = async (tranId) => {
   const response = await axios.get(
     process.env.AAMARPAY_VERIFY_URL ||
-    "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php",
+      "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php",
     {
       params: {
         request_id: tranId,
@@ -24,22 +24,25 @@ const verifyAamarpayPayment = async (tranId) => {
           process.env.AAMARPAY_SIGNATURE_KEY || "dbb74894e82415a2f7ff0ec3a97e4183",
         type: "json",
       },
+      // Sob somoy raw text hishebe nibo, tarpor nijei parse korbo
+      responseType: "text",
+      transformResponse: [(data) => data],
     }
   );
+
   let data = response.data;
 
-  // Kokhono string hishebe ashe, tai parse kore nao
   if (typeof data === "string") {
     try {
       data = JSON.parse(data);
     } catch (err) {
       console.error("Aamarpay verify response parse failed:", data);
+      return null;
     }
   }
 
   return data;
 };
-
 
 
 

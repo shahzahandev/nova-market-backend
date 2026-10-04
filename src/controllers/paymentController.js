@@ -12,23 +12,36 @@ const getTranId = (req) =>
   req.body?.mer_txnid || req.body?.tran_id || req.query?.tranId || "";
 
 // Aamarpay er server theke payment ashole hoyeche kina verify kora
+
 const verifyAamarpayPayment = async (tranId) => {
-  const response = await axios.get(
+  // trim() dewa hoyeche, jate env er value te invisible space/newline thakleo kaj kore
+  const verifyUrl = (
     process.env.AAMARPAY_VERIFY_URL ||
-      "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php",
-    {
-      params: {
-        request_id: tranId,
-        store_id: process.env.AAMARPAY_STORE_ID || "aamarpaytest",
-        signature_key:
-          process.env.AAMARPAY_SIGNATURE_KEY || "dbb74894e82415a2f7ff0ec3a97e4183",
-        type: "json",
-      },
-      // Sob somoy raw text hishebe nibo, tarpor nijei parse korbo
-      responseType: "text",
-      transformResponse: [(data) => data],
-    }
-  );
+    "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php"
+  ).trim();
+  const storeId = (process.env.AAMARPAY_STORE_ID || "aamarpaytest").trim();
+  const signatureKey = (
+    process.env.AAMARPAY_SIGNATURE_KEY || "dbb74894e82415a2f7ff0ec3a97e4183"
+  ).trim();
+
+  // Secret print kora hoy na, shudhu key er length dekhabe
+  console.log("Aamarpay verify call:", {
+    verifyUrl,
+    storeId,
+    signatureKeyLength: signatureKey.length,
+  });
+
+  const response = await axios.get(verifyUrl, {
+    params: {
+      request_id: tranId,
+      store_id: storeId,
+      signature_key: signatureKey,
+      type: "json",
+    },
+    // Sob somoy raw text hishebe nibo, tarpor nijei parse korbo
+    responseType: "text",
+    transformResponse: [(data) => data],
+  });
 
   let data = response.data;
 
@@ -43,7 +56,6 @@ const verifyAamarpayPayment = async (tranId) => {
 
   return data;
 };
-
 
 
 

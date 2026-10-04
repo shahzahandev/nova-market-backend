@@ -194,27 +194,45 @@ exports.paymentController = async (req, res) => {
 exports.paymentSuccess = async (req, res) => {
   const tranId = getTranId(req);
 
-  try {
-    const order = await Order.findOne({ tranId });
+  // Fail e pathabe, kintu URL e karon ta-o jure dibe (browser er address bar e dekha jabe)
+  const toFail = (reason) =>
+    res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}&reason=${reason}`);
 
-    if (!order) {
-      return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
-    }
+  try {
+    console.log("Aamarpay success callback:", req.method, req.body, req.query);
+
+    const order = await Order.findOne({ tranId });
+    if (!order) return toFail("order_not_found");
 
     const result = await verifyAamarpayPayment(tranId);
     console.log("Aamarpay verify result:", result);
-    console.log("Order totalPrice:", order.totalPrice, "tranId:", tranId);
 
-    const isPaid =
-      result.pay_status === "Successful" &&
-      result.mer_txnid === tranId &&
-      Number(result.amount) === Number(order.totalPrice);
+    // Verify response bujha na gele order cancel korbo na
+    if (!result || typeof result !== "object" || !result.pay_status) {
+      return toFail("verify_failed");
+    }
 
-    if (!isPaid) {
+    // Aamarpay nijei bolche payment Successful na
+    if (result.pay_status !== "Successful") {
       order.paymentStatus = "failed";
       order.status = "cancelled";
       await order.save();
-      return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
+      return toFail("not_successful");
+    }
+
+    // Gateway fee jog hole `amount` bere jay, tai `amount_original` age dekhi
+    const paidAmount = Number(result.amount_original ?? result.amount);
+    const sameAmount = Math.abs(paidAmount - Number(order.totalPrice)) < 1;
+    const sameTran = !result.mer_txnid || result.mer_txnid === tranId;
+
+    if (!sameAmount || !sameTran) {
+      console.error("Payment mismatch:", {
+        paidAmount,
+        orderTotal: order.totalPrice,
+        mer_txnid: result.mer_txnid,
+        tranId,
+      });
+      return toFail(!sameAmount ? "amount_mismatch" : "tran_mismatch");
     }
 
     // Duplicate callback hole abar update korbe na
@@ -227,7 +245,7 @@ exports.paymentSuccess = async (req, res) => {
     return res.redirect(303, `${FRONTEND_URL}/payment/success?tranId=${tranId}`);
   } catch (error) {
     console.error("Payment success error:", error.response?.data || error.message);
-    return res.redirect(303, `${FRONTEND_URL}/payment/fail?tranId=${tranId}`);
+    return toFail("server_error");
   }
 };
 

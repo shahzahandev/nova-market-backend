@@ -176,7 +176,7 @@ exports.cartdelete = async (req, res) => {
     }
 }
 
-exports.getSingleCard = async (req, res) => {
+exports.getSingleCart = async (req, res) => {
     try {
         const { userId } = req.params
         const cart = await Card.find({ user: userId }).populate("user product"); 
@@ -201,9 +201,9 @@ exports.getSingleCard = async (req, res) => {
     }
 }
 
-exports.allCard = async(req, res) => {
+exports.allCart = async(req, res) => {
     try {
-         const card = await Card.find({});
+         const card = await Card.find({}).populate('product user');
          return res.status(200).json({
             success: false.valueOf,
             message: 'Fetching all cart successfully',

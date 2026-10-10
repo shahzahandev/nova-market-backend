@@ -1,9 +1,6 @@
-const Product = require("../models/productModel");
-const Category = require("../models/categoryModels");
 const mongoose = require("mongoose");
+const Product = require("../models/productModel");
 const { uploadToCloudinary, deleteFromCloudinary, } = require("../helpers/cloudinaryHelper");
-
-
 
 
 exports.createProductController = async (req, res) => {
@@ -957,96 +954,5 @@ exports.featureProductController = async(req, res) => {
       message: 'Server error',
       error: error.message
     });
-  }
-}
-
-
-
-// Category controller
-exports.createCategoryController = async (req, res) => {
-  const { name } = req.body
-  try {
-
-    if (!name || !name.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category name is requred'
-      });
-    }
-
-    const normalizedName = name.trim().toLowerCase();
-
-    const existingCategory = await Category.findOne({
-      name: normalizedName
-    });
-
-
-    if (existingCategory) {
-      return res.status(400).json({
-        success: false,
-        message: 'This Catagorey already exists'
-      })
-    }
-
-
-    let category = new Category({
-      name: normalizedName
-    })
-    await category.save();
-
-    return res.status(201).json({
-      success: true,
-      messege: 'Category created',
-      category
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
-  }
-}
-
-exports.getAllCategoryController = async (req, res) => {
-  try {
-    const allCategory = await Category.find({});
-
-    return res.status(200).json({
-      success: true,
-      message: 'Fetching all categoryes',
-      allCategory
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
-  }
-}
-
-exports.deleteCategroyController = async (req, res) => {
-  try {
-    const { id } = req.params
-
-    const deleteCategroy = await Category.findByIdAndDelete(id)
-
-    if (!id) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found"
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Categroy deleted succesfully"
-    })
-
-  } catch (error) {
-
   }
 }

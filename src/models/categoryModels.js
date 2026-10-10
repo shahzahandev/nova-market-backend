@@ -7,6 +7,11 @@ const categorySchema = new Schema ({
         type: String,
         required: true
     },
+    status: {
+        type: String,
+        enum: ['active', 'hold'],
+        default: 'active'
+    }
 }, {timestamps: true})
 
 

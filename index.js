@@ -8,6 +8,7 @@ const dbConnection = require('./src/config/dbConnection');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const productRoutes = require('./src/routes/productRoutes');
+const categoryRoutes = require('./src/routes/categoryRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const bannerRoutes = require('./src/routes/bannerRoutes');
@@ -51,6 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/auth', authRoutes);   // checked
 app.use('/api/v1/user', userRoutes);   // checked
 app.use('/api/v1/product', productRoutes);  // checked
+app.use('/api/v1/category', categoryRoutes)
 app.use('/api/v1/cart', cartRoutes);   // checked
 app.use('/api/v1/order', orderRoutes);  // checked
 app.use('/api/v1/banner', bannerRoutes) // checked

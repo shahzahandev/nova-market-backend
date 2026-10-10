@@ -56,6 +56,7 @@ exports.getAllCategoryController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Fetching all categoryes',
+      total: `${allCategory.length} Category`,
       allCategory
     });
   } catch (error) {
@@ -68,15 +69,15 @@ exports.getAllCategoryController = async (req, res) => {
   }
 }
 
-
 exports.getAllActiveCategoryController = async (req, res) => {
   try {
-    const allCategory = await Category.find({ status : "active" });
+    const allActiveCategory = await Category.find({ status : "active" }).sort();
 
     return res.status(200).json({
       success: true,
       message: 'Fetching all Active categoryes',
-      allCategory
+      active : `${allActiveCategory.length} Category`,
+      allActiveCategory
     });
 
   } catch (error) {
@@ -112,7 +113,6 @@ exports.deleteCategroyController = async (req, res) => {
 
   }
 }
-
 
 exports.updateCategoryController = async (req, res) => {
   try {

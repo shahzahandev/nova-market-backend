@@ -68,6 +68,27 @@ exports.getAllCategoryController = async (req, res) => {
   }
 }
 
+
+exports.getAllActiveCategoryController = async (req, res) => {
+  try {
+    const allCategory = await Category.find({ status : "active" });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Fetching all Active categoryes',
+      allCategory
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+}
+
 exports.deleteCategroyController = async (req, res) => {
   try {
     const { id } = req.params

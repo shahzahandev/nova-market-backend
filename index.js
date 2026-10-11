@@ -22,13 +22,14 @@ dbConnection();
 
 // <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
+ 
 
-let frontend = process.env.FRONTEND_URL
-let dashboard = process.env.DASHBOARD_URL
-let localhost1 = "http://localhost:5173"
-let localhost2 = "http://localhost:5174"
-
-const allowedOrigins = [localhost1, localhost2, frontend,dashboard];
+const allowedOrigins = [
+"http://localhost:5173",
+"http://localhost:5174",
+"https://nova-market-frontend.vercel.app",
+"https://nova-market-dashboard.vercel.app"
+];
 
 const corsMiddleware = cors({
   origin: function (origin, callback) {

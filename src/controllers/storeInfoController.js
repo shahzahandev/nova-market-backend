@@ -1,14 +1,6 @@
 
 import StoreInfo from "../models/storeModel.js";
 
-// Allowed store policy fields
-const allowedPolicies = [
-  "privacyPolicy",
-  "returnPolicy",
-  "shippingPolicy",
-  "termsAndConditions",
-];
-
 // Validate store phone numbers
 const validateStorePhones = (phones) => {
   return (
@@ -17,36 +9,10 @@ const validateStorePhones = (phones) => {
     phones.length <= 2 &&
     phones.every(
       (phone) =>
-        typeof phone === "string" && phone.trim() !== ""
+        typeof phone === "string" &&
+        phone.trim() !== ""
     )
   );
-};
-
-// Validate store policy object
-const validateStorePolicy = (storePolicy) => {
-  if (
-    !storePolicy ||
-    typeof storePolicy !== "object" ||
-    Array.isArray(storePolicy)
-  ) {
-    return "Store policy must be an object";
-  }
-
-  const invalidPolicies = Object.keys(storePolicy).filter(
-    (key) => !allowedPolicies.includes(key)
-  );
-
-  if (invalidPolicies.length > 0) {
-    return `Invalid policy fields: ${invalidPolicies.join(", ")}`;
-  }
-
-  for (const [key, value] of Object.entries(storePolicy)) {
-    if (typeof value !== "string") {
-      return `${key} must be a string`;
-    }
-  }
-
-  return null;
 };
 
 // Create Store Information
@@ -57,54 +23,31 @@ export const createStoreInfo = async (req, res) => {
       storeEmail,
       storeAddress,
       storePhone,
-      storePolicy,
+      returnPolicy,
     } = req.body;
 
-    // Validate store name
-    if (
-      typeof storeName !== "string" ||
-      !storeName.trim()
-    ) {
+    // Validate required fields
+    if (!storeName?.trim()) {
       return res.status(400).json({
         success: false,
         message: "Store name is required",
       });
     }
 
-    // Validate store email
-    if (
-      typeof storeEmail !== "string" ||
-      !storeEmail.trim()
-    ) {
+    if (!storeEmail?.trim()) {
       return res.status(400).json({
         success: false,
         message: "Store email is required",
       });
     }
 
-    const normalizedEmail = storeEmail.trim().toLowerCase();
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(normalizedEmail)) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide a valid email address",
-      });
-    }
-
-    // Validate store address
-    if (
-      typeof storeAddress !== "string" ||
-      !storeAddress.trim()
-    ) {
+    if (!storeAddress?.trim()) {
       return res.status(400).json({
         success: false,
         message: "Store address is required",
       });
     }
 
-    // Validate store phone numbers
     if (!validateStorePhones(storePhone)) {
       return res.status(400).json({
         success: false,
@@ -113,49 +56,39 @@ export const createStoreInfo = async (req, res) => {
       });
     }
 
-    // Validate store policy if provided
-    if (storePolicy !== undefined) {
-      const policyError = validateStorePolicy(storePolicy);
-
-      if (policyError) {
-        return res.status(400).json({
-          success: false,
-          message: policyError,
-        });
-      }
-    }
-
-    // Check existing store information
+    // Check whether store information already exists
     const existingStore = await StoreInfo.findOne();
 
     if (existingStore) {
       return res.status(409).json({
         success: false,
-        message:"Store information already exists. Please update it instead.",
+        message:
+          "Store information already exists. Please update it instead.",
       });
     }
 
     // Prepare store data
     const storeData = {
       storeName: storeName.trim(),
-      storeEmail: normalizedEmail,
+      storeEmail: storeEmail.trim().toLowerCase(),
       storeAddress: storeAddress.trim(),
       storePhone: storePhone.map((phone) => phone.trim()),
+      returnPolicy:
+        typeof returnPolicy === "string"
+          ? returnPolicy.trim()
+          : "",
     };
 
-    if (storePolicy !== undefined) {
-      storeData.storePolicy = storePolicy;
-    }
-
-    // Create store information
-    const store = await StoreInfo.create(storeData);
+    const storeInfo = await StoreInfo.create(storeData);
 
     return res.status(201).json({
       success: true,
       message: "Store information created successfully",
-      storeInfo: store,
+      storeInfo,
     });
   } catch (error) {
+    console.error("Create store info error:", error);
+
     return res.status(400).json({
       success: false,
       message: error.message,
@@ -181,6 +114,8 @@ export const getStoreInfo = async (req, res) => {
       storeInfo,
     });
   } catch (error) {
+    console.error("Get store info error:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -196,12 +131,11 @@ export const updateStoreInfo = async (req, res) => {
       storeEmail,
       storeAddress,
       storePhone,
-      storePolicy,
+      returnPolicy,
     } = req.body;
 
     const updateData = {};
 
-    // Update store name
     if (storeName !== undefined) {
       if (
         typeof storeName !== "string" ||
@@ -216,7 +150,6 @@ export const updateStoreInfo = async (req, res) => {
       updateData.storeName = storeName.trim();
     }
 
-    // Update store email
     if (storeEmail !== undefined) {
       if (
         typeof storeEmail !== "string" ||
@@ -228,21 +161,9 @@ export const updateStoreInfo = async (req, res) => {
         });
       }
 
-      const normalizedEmail = storeEmail.trim().toLowerCase();
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(normalizedEmail)) {
-        return res.status(400).json({
-          success: false,
-          message: "Please provide a valid email address",
-        });
-      }
-
-      updateData.storeEmail = normalizedEmail;
+      updateData.storeEmail = storeEmail.trim().toLowerCase();
     }
 
-    // Update store address
     if (storeAddress !== undefined) {
       if (
         typeof storeAddress !== "string" ||
@@ -257,7 +178,6 @@ export const updateStoreInfo = async (req, res) => {
       updateData.storeAddress = storeAddress.trim();
     }
 
-    // Update store phone numbers
     if (storePhone !== undefined) {
       if (!validateStorePhones(storePhone)) {
         return res.status(400).json({
@@ -272,23 +192,17 @@ export const updateStoreInfo = async (req, res) => {
       );
     }
 
-    // Update individual store policy fields
-    if (storePolicy !== undefined) {
-      const policyError = validateStorePolicy(storePolicy);
-
-      if (policyError) {
+    if (returnPolicy !== undefined) {
+      if (typeof returnPolicy !== "string") {
         return res.status(400).json({
           success: false,
-          message: policyError,
+          message: "Return policy must be a string",
         });
       }
 
-      for (const [key, value] of Object.entries(storePolicy)) {
-        updateData[`storePolicy.${key}`] = value.trim();
-      }
+      updateData.returnPolicy = returnPolicy.trim();
     }
 
-    // Check whether any field was provided
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
         success: false,
@@ -296,7 +210,6 @@ export const updateStoreInfo = async (req, res) => {
       });
     }
 
-    // Update existing store information
     const storeInfo = await StoreInfo.findOneAndUpdate(
       {},
       { $set: updateData },
@@ -319,6 +232,8 @@ export const updateStoreInfo = async (req, res) => {
       storeInfo,
     });
   } catch (error) {
+    console.error("Update store info error:", error);
+
     return res.status(400).json({
       success: false,
       message: error.message,

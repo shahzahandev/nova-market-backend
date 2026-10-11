@@ -48,31 +48,11 @@ const storeInfoSchema = new mongoose.Schema(
       ],
       default: undefined,
     },
-
-    storePolicy: {
-      privacyPolicy: {
-        type: String,
-        default: "",
-        trim: true,
-      },
-
-      returnPolicy: {
-        type: String,
-        default: "",
-        trim: true,
-      },
-
-      shippingPolicy: {
-        type: String,
-        default: "",
-        trim: true,
-      },
-
-      termsAndConditions: {
-        type: String,
-        default: "",
-        trim: true,
-      },
+    
+    returnPolicy: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   {

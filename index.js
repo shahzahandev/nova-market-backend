@@ -1,9 +1,8 @@
 require('dotenv').config();
-require('node:dns/promises').setServers(['1.1.1.1','8.8.8.8']);
+require('node:dns/promises').setServers(['1.1.1.1', '8.8.8.8']);
 const cors = require('cors');
 const express = require('express');
 const app = express();
-const path = require('path');
 const dbConnection = require('./src/config/dbConnection');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
@@ -24,12 +23,12 @@ dbConnection();
 // <==== middleware ====>
 app.use(express.json({ limit: '10kb' }));
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "https://nova-market-frontend.vercel.app",
-  "https://nova-market-dashboard.vercel.app",
-];
+let frontend = process.env.FRONTEND_URL
+let dashboard = process.env.DASHBOARD_URL
+let localhost1 = "http://localhost:5173"
+let localhost2 = "http://localhost:5174"
+
+const allowedOrigins = [localhost1, localhost2, frontend,dashboard];
 
 const corsMiddleware = cors({
   origin: function (origin, callback) {
@@ -63,11 +62,8 @@ app.use("/api/v1/whatsapp", whatsappRoutes); // checked
 app.use("/api/v1/notice", noticeRoute); // checked
 app.use("/api/v1/store", storeRoute);
 
-
-app.use('/upload', express.static(path.join(__dirname, 'src/upload')));
-
 // <==== PORT ====> 
 const port = process.env.PORT || 3000
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });

@@ -7,16 +7,36 @@ const {
 
 const MAX_IMAGES = 6;
 
+const TEXT_FIELDS = [
+  "eyebrow",
+  "headingFirst",
+  "headingSecond",
+  "paragraph",
+  "buttonText",
+];
+
+// req.body theke sudhu pathano text field gulo nibe
+const pickTextFields = (body) => {
+  const data = {};
+  for (const field of TEXT_FIELDS) {
+    if (body[field] !== undefined) {
+      data[field] = String(body[field]).trim();
+    }
+  }
+  return data;
+};
+
 exports.upsertHeroSliderController = async (req, res) => {
   let uploadedNewImages = [];
 
   try {
     let hero = await HeroSlider.findOne();
 
+    const textData = pickTextFields(req.body);
+
     // -----------------------------
     // Parse removeImages
     // -----------------------------
-
     let removeImages = req.body.removeImages;
 
     if (removeImages) {
@@ -42,7 +62,6 @@ exports.upsertHeroSliderController = async (req, res) => {
     // -----------------------------
     // Uploaded files
     // -----------------------------
-
     const files = Array.isArray(req.files) ? req.files : [];
 
     if (files.length > MAX_IMAGES) {
@@ -55,7 +74,6 @@ exports.upsertHeroSliderController = async (req, res) => {
     // =====================================================
     // CREATE
     // =====================================================
-
     if (!hero) {
       if (files.length === 0) {
         return res.status(400).json({
@@ -77,6 +95,7 @@ exports.upsertHeroSliderController = async (req, res) => {
       }
 
       hero = new HeroSlider({
+        ...textData,
         images: uploadedNewImages,
       });
 
@@ -86,7 +105,6 @@ exports.upsertHeroSliderController = async (req, res) => {
         for (const image of uploadedNewImages) {
           await deleteFromCloudinary(image.public_id);
         }
-
         throw saveError;
       }
 
@@ -100,7 +118,6 @@ exports.upsertHeroSliderController = async (req, res) => {
     // =====================================================
     // UPDATE
     // =====================================================
-
     const currentImages = hero.images.filter(
       (image) => !removeImages.includes(image.public_id)
     );
@@ -118,10 +135,7 @@ exports.upsertHeroSliderController = async (req, res) => {
       });
     }
 
-    const finalImages = [
-      ...currentImages,
-      ...uploadedNewImages,
-    ];
+    const finalImages = [...currentImages, ...uploadedNewImages];
 
     // Maximum validation
     if (finalImages.length > MAX_IMAGES) {
@@ -152,7 +166,8 @@ exports.upsertHeroSliderController = async (req, res) => {
       removeImages.includes(image.public_id)
     );
 
-    // Save database first
+    // Text + images update
+    Object.assign(hero, textData);
     hero.images = finalImages;
 
     await hero.save();
@@ -161,11 +176,7 @@ exports.upsertHeroSliderController = async (req, res) => {
     for (const image of removedImages) {
       try {
         await deleteFromCloudinary(image.public_id);
-
-        console.log(
-          "Deleted Cloudinary banner:",
-          image.public_id
-        );
+        console.log("Deleted Cloudinary banner:", image.public_id);
       } catch (deleteError) {
         console.error(
           "Failed to delete banner:",
@@ -188,10 +199,7 @@ exports.upsertHeroSliderController = async (req, res) => {
       try {
         await deleteFromCloudinary(image.public_id);
       } catch (cleanupError) {
-        console.error(
-          "Cloudinary cleanup failed:",
-          cleanupError.message
-        );
+        console.error("Cloudinary cleanup failed:", cleanupError.message);
       }
     }
 
@@ -210,6 +218,11 @@ exports.getHeroSliderController = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: hero || {
+        eyebrow: "",
+        headingFirst: "",
+        headingSecond: "",
+        paragraph: "",
+        buttonText: "",
         images: [],
       },
     });

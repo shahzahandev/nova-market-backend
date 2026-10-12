@@ -16,6 +16,7 @@ const deliveryRoutes = require('./src/routes/deliveryRoutes');
 const whatsappRoutes = require('./src/routes/whatsappRoutes');
 const noticeRoute = require('./src/routes/noticeRoute');
 const storeRoute = require('./src/routes/storeRoutes');
+const messageRoute = require('./src/routes/contactMessageRoutes');
 
 // <==== Database connetion =====>
 dbConnection();
@@ -61,7 +62,8 @@ app.use('/api/v1/wishlist', wishlistRoutes) // checked
 app.use("/api/v1/delivery", deliveryRoutes); // checked
 app.use("/api/v1/whatsapp", whatsappRoutes); // checked
 app.use("/api/v1/notice", noticeRoute); // checked
-app.use("/api/v1/store", storeRoute);
+app.use("/api/v1/store", storeRoute); // checked
+app.use("/api/v1/message", messageRoute); // checked
 
 // <==== PORT ====> 
 const port = process.env.PORT || 3000

@@ -3,9 +3,7 @@ const storage = multer.memoryStorage();
 
 
 const uploadProductImg = multer({ storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024,
-  },
+  limits: { fileSize: 5 * 1024 * 1024, },
 
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
@@ -34,9 +32,7 @@ const uploadProductImg = multer({ storage,
 });
 
 
-module.exports = {
-  uploadProductImg,
-};
+module.exports = { uploadProductImg };
 
 
 

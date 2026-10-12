@@ -15,9 +15,9 @@ router.get("/allMessage", getAllContactMessages);
 router.get("/singleMessage/:id", getSingleContactMessage);
 
 // UPDATE MESSAGE STATUS
-router.patch("update/:id/status", updateContactMessageStatus);
+router.patch("/update/:id/status", updateContactMessageStatus);
 
 // DELETE MESSAGE
-router.delete("delete/:id", deleteContactMessage);
+router.delete("/delete/:id", deleteContactMessage);
 
 module.exports = router;

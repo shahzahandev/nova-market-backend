@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const ContactMessage = require("../models/contactMessageModel");
 
-// 1. CUSTOMER: CREATE CONTACT MESSAGE
+// CREATE CONTACT MESSAGE
 exports.createContactMessage = async (req, res) => {
   try {
     const { name, email, phone, comment } = req.body;
@@ -70,7 +70,7 @@ exports.createContactMessage = async (req, res) => {
   }
 };
 
-// 2. ADMIN: GET ALL CONTACT MESSAGES
+// GET ALL CONTACT MESSAGES
 exports.getAllContactMessages = async (req, res) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -127,7 +127,7 @@ exports.getAllContactMessages = async (req, res) => {
   }
 };
 
-// 3. ADMIN: GET SINGLE CONTACT MESSAGE
+// GET SINGLE CONTACT MESSAGE
 exports.getSingleContactMessage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -162,7 +162,7 @@ exports.getSingleContactMessage = async (req, res) => {
   }
 };
 
-// 4. ADMIN: UPDATE MESSAGE STATUS
+// UPDATE MESSAGE STATUS
 exports.updateContactMessageStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -218,7 +218,7 @@ exports.updateContactMessageStatus = async (req, res) => {
   }
 };
 
-// 5. ADMIN: DELETE CONTACT MESSAGE
+// DELETE CONTACT MESSAGE
 exports.deleteContactMessage = async (req, res) => {
   try {
     const { id } = req.params;

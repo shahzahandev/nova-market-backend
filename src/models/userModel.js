@@ -50,7 +50,7 @@ let userModelSchema = new Schema({
     },
     status: {
         type: String,
-        emum: ['active', 'inactive'],
+        enum: ['active', 'inactive'],
         default: 'active'
     },
     address: {

@@ -1,6 +1,6 @@
 const User = require('../models/userModel')
 
-
+// All User 
 exports.getAllUsersController = async (req, res) => {
     try {
         const userData = await User.find({}).select('-password')
@@ -21,6 +21,7 @@ exports.getAllUsersController = async (req, res) => {
     }
 }
 
+// Single User 
 exports.singleUserController = async (req, res) => {
     let { id } = req.params;
 
@@ -48,6 +49,7 @@ exports.singleUserController = async (req, res) => {
     }
 }
 
+// Delete User
 exports.deleteUserController = async (req, res) => {
     let { id } = req.params;
 
@@ -75,6 +77,7 @@ exports.deleteUserController = async (req, res) => {
     }
 }
 
+// User Update for User (User can update name, phone, city, postalCode, address information)
 exports.updateUserController = async (req, res) => {
     let { id } = req.params;
       const { name, phone, city, postalCode, address } = req.body;
@@ -108,3 +111,86 @@ exports.updateUserController = async (req, res) => {
         });
     }
 }
+
+
+// User Update for Admin (hold and status)
+exports.adminUpdateUserStatusController = async (req, res) => {
+    const { id } = req.params;
+    const { isHold, status } = req.body;
+
+    try {
+        const updateData = {};
+
+        // Validate isHold
+        if (isHold !== undefined) {
+            if (typeof isHold !== 'boolean') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'isHold must be true or false.'
+                });
+            }
+
+            updateData.isHold = isHold;
+        }
+
+        // Validate status
+        if (status !== undefined) {
+            const allowedStatuses = ['active', 'inactive'];
+
+            if (!allowedStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Status must be active or inactive.'
+                });
+            }
+
+            updateData.status = status;
+        }
+
+        // Prevent empty updates
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide isHold or status.'
+            });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            id,
+            { $set: updateData },
+            {
+                new: true,
+                runValidators: true
+            }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'User status updated successfully.',
+            user
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID.'
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server error.',
+            error: error.message
+        });
+    }
+};

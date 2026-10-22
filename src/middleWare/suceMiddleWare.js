@@ -8,7 +8,7 @@ let suceMiddleWare = (req, res, next) => {
         return res.status(400).json({
             success: false,
             message: "Unauthorization.",
-            error: error.message
+            error: err.message
         }); 
        } else {
         next();

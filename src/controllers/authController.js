@@ -78,58 +78,58 @@ exports.registrationController = async (req, res) => {
     }
 }
 
-exports.loginController = async (req, res) => {
-    const { email, password } = req.body;
+// exports.loginController = async (req, res) => {
+//     const { email, password } = req.body;
 
-    try {
-            // <=== if email & password are empty ===>
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Email and password are required.",
-            });
-        }
+//     try {
+//             // <=== if email & password are empty ===>
+//         if (!email || !password) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Email and password are required.",
+//             });
+//         }
 
-        let existingUser = await User.findOne({ email: email }).select("+password");
+//         let existingUser = await User.findOne({ email: email }).select("+password");
 
-        if (!existingUser) {
-            return res.status(404).json({
-                success: false,
-                message: "No account found with this email address."
-            })
-        }
+//         if (!existingUser) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "No account found with this email address."
+//             })
+//         }
 
-        // <=== Password matching proccess ===>
-        let pass = bcrypt.compareSync(password, existingUser.password);
-        if (!pass) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid email or password."
-            });
-        }
-        res.status(200).json({
-            success: true,
-            message: "Login completed successfully.",
-            existingUser: {
-                _id: existingUser._id,
-                name: existingUser.name,
-                email: existingUser.email,
-                phone: existingUser.phone,
-                address: existingUser.address,
-                city: existingUser.city,
-                postalCode: existingUser.postalCode,
-            }
-            });
+//         // <=== Password matching proccess ===>
+//         let pass = bcrypt.compareSync(password, existingUser.password);
+//         if (!pass) {
+//             return res.status(401).json({
+//                 success: false,
+//                 message: "Invalid email or password."
+//             });
+//         }
+//         res.status(200).json({
+//             success: true,
+//             message: "Login completed successfully.",
+//             existingUser: {
+//                 _id: existingUser._id,
+//                 name: existingUser.name,
+//                 email: existingUser.email,
+//                 phone: existingUser.phone,
+//                 address: existingUser.address,
+//                 city: existingUser.city,
+//                 postalCode: existingUser.postalCode,
+//             }
+//             });
 
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error.",
-            error: error.message
-        })
-    }
-}
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal server error.",
+//             error: error.message
+//         })
+//     }
+// }
 
 exports.forgotPasswordController = async (req, res) => {
     let { email } = req.body;
@@ -289,4 +289,125 @@ exports.verifyEmailController = async (req, res) => {
         })
     }
 }
+
+
+
+
+
+exports.loginController = async (req, res) => {
+    const { email, password, loginType = "user" } = req.body;
+
+    try {
+        // 1. Validate input
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required.",
+            });
+        }
+
+        if (!["user", "admin"].includes(loginType)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid login type.",
+            });
+        }
+
+        // 2. Find user
+        const existingUser = await User.findOne({ email: email.trim().toLowerCase(), }).select("+password");
+
+        if (!existingUser) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password.",
+            });
+        }
+
+        // 3. Check password
+        const pass = await bcrypt.compare( password, existingUser.password );
+
+        if (!pass) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password.",
+            });
+        }
+
+        // 4. Check account hold/status
+        if (existingUser.isHold === true) {
+            return res.status(403).json({
+                success: false,
+                message: "Your account is on hold. Please contact support.",
+            });
+        }
+
+        if (existingUser.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Your account is inactive. Please contact support.",
+            });
+        }
+
+        // 5. Check role according to login type
+        if (loginType === "admin" && existingUser.role !== "admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Admin access denied.",
+            });
+        }
+
+        if ( loginType === "user" && existingUser.role !== "user" ) {
+            return res.status(403).json({
+                success: false,
+                message: "User login is not permitted for this account.",
+            });
+        }
+
+        // 6. Admin login: create access token
+        if (loginType === "admin") {
+            const token = tokenGenerator(
+                {
+                    id: existingUser._id.toString(),
+                    email: existingUser.email,
+                },
+                process.env.JWT_SECRET_KEY,
+                process.env.JWT_ACCESS_TOKEN_EXPIRY
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "Admin login successful.",
+                token,
+                existingUser: {
+                    _id: existingUser._id,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    role: existingUser.role,
+                },
+            });
+        }
+
+        // 7. Regular user login: preserve existing response
+        return res.status(200).json({
+            success: true,
+            message: "Login completed successfully.",
+            existingUser: {
+                _id: existingUser._id,
+                name: existingUser.name,
+                email: existingUser.email,
+                phone: existingUser.phone,
+                address: existingUser.address,
+                city: existingUser.city,
+                postalCode: existingUser.postalCode,
+            },
+        });
+
+    } catch (error) {
+        console.error("Login Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
+    }
+};
 

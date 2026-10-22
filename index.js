@@ -17,6 +17,7 @@ const whatsappRoutes = require('./src/routes/whatsappRoutes');
 const noticeRoute = require('./src/routes/noticeRoute');
 const storeRoute = require('./src/routes/storeRoutes');
 const messageRoute = require('./src/routes/contactMessageRoutes');
+const adminRoute = require('./src/routes/adminRoutes');
 
 // <==== Database connetion =====>
 dbConnection();
@@ -60,10 +61,11 @@ app.use('/api/v1/order', orderRoutes);  // checked
 app.use('/api/v1/banner', bannerRoutes) // checked
 app.use('/api/v1/wishlist', wishlistRoutes) // checked
 app.use("/api/v1/delivery", deliveryRoutes); // checked
-app.use("/api/v1/whatsapp", whatsappRoutes); // checked
-app.use("/api/v1/notice", noticeRoute); // checked
-app.use("/api/v1/store", storeRoute); // checked
-app.use("/api/v1/message", messageRoute); // checked
+app.use('/api/v1/whatsapp', whatsappRoutes); // checked
+app.use('/api/v1/notice', noticeRoute); // checked
+app.use('/api/v1/store', storeRoute); // checked
+app.use('/api/v1/message', messageRoute); // checked
+app.use('/api/v1/admin', adminRoute);
 
 // <==== PORT ====> 
 const port = process.env.PORT || 3000

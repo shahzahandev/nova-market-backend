@@ -1,25 +1,17 @@
 const express = require("express");
-
 const router = express.Router();
 
-const {
-  uploadBannerImg,
-} = require("../middleWare/uploadBanner");
+const { uploadBannerImg,} = require("../middleWare/uploadBanner");
+const { upsertHeroSliderController, getHeroSliderController,} = require("../controllers/bannerImgController");
+const verifyToken = require("../middleWare/suceMiddleWare");
+const authorizeAdmin = require("../middleWare/authorizeAdmin");
 
-const {
-  upsertHeroSliderController,
-  getHeroSliderController,
-} = require("../controllers/bannerImgController");
 
-router.post(
-  "/createHeroSlider",
-  uploadBannerImg.array("images", 6),
-  upsertHeroSliderController
-);
 
-router.get(
-  "/getHeroSlider",
-  getHeroSliderController
-);
+router.post("/createHeroSlider", uploadBannerImg.array("images", 6), verifyToken, authorizeAdmin, upsertHeroSliderController); // admin
+router.get("/getHeroSlider", getHeroSliderController );
+
+
+
 
 module.exports = router;

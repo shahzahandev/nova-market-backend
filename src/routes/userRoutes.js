@@ -4,9 +4,9 @@ const { getAllUsersController, singleUserController, deleteUserController, updat
 const verifyToken = require('../middleWare/suceMiddleWare');
 const authorizeAdmin = require('../middleWare/authorizeAdmin');
 
-router.get("/allUsers", getAllUsersController);
-router.get("/singleUser/:id", singleUserController);
-router.delete("/deleteUser/:id", deleteUserController);
+router.get("/allUsers", verifyToken, authorizeAdmin, getAllUsersController);  // For Admin
+router.get("/singleUser/:id", verifyToken, authorizeAdmin, singleUserController);  // For Admin
+router.delete("/deleteUser/:id", verifyToken, authorizeAdmin, deleteUserController);  // For Admin
 router.post("/updateUser/:id", updateUserController); // For User
 
 router.patch("/admin/:id/status", verifyToken, authorizeAdmin, adminUpdateUserStatusController); // For Admin

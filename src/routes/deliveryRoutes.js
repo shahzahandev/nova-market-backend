@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const { getDeliverySettings, updateDeliverySettings } = require("../controllers/deliveryController");
-// tomar admin auth middleware boshao
-// const { isAdmin } = require("../middlewares/auth");
+const authorizeAdmin = require("../middleWare/authorizeAdmin");
+const verifyToken = require("../middleWare/suceMiddleWare");
+
 
 router.get("/settings", getDeliverySettings);
-router.put("/settings", /* isAdmin, */ updateDeliverySettings); // admin middleware dite bhulo na
+router.put("/settings", verifyToken, authorizeAdmin, updateDeliverySettings); // admin
 
 module.exports = router;

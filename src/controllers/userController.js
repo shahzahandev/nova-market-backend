@@ -114,9 +114,10 @@ exports.updateUserController = async (req, res) => {
 
 
 // User Update for Admin (hold and status)
+
 exports.adminUpdateUserStatusController = async (req, res) => {
     const { id } = req.params;
-    const { isHold, status } = req.body;
+    const { isHold, status, role } = req.body;
 
     try {
         const updateData = {};
@@ -147,11 +148,25 @@ exports.adminUpdateUserStatusController = async (req, res) => {
             updateData.status = status;
         }
 
+        // Validate role
+        if (role !== undefined) {
+            const allowedRoles = ['admin', 'user', 'editor', 'vendor'];
+
+            if (!allowedRoles.includes(role)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Role must be admin, user, editor, or vendor.'
+                });
+            }
+
+            updateData.role = role;
+        }
+
         // Prevent empty updates
         if (Object.keys(updateData).length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Please provide isHold or status.'
+                message: 'Please provide isHold, status, or role.'
             });
         }
 
@@ -173,7 +188,7 @@ exports.adminUpdateUserStatusController = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'User status updated successfully.',
+            message: 'User updated successfully.',
             user
         });
 
@@ -189,8 +204,7 @@ exports.adminUpdateUserStatusController = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: 'Server error.',
-            error: error.message
+            message: 'Server error.'
         });
     }
 };
